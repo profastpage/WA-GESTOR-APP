@@ -329,10 +329,7 @@ export default function ClientList({ clients, setClients, templates, logMessage,
         </div>
       )}
 
-      <ActivationModal
-        isOpen={false}
-        onClose={() => {}}
-      />
+      {/* Modal de activación simple - no usado, solo placeholder */}
     </div>
   );
 }
