@@ -1,18 +1,16 @@
 // Firebase Configuration
-// TODO: Reemplaza estos valores con tu configuración de Firebase
-// Ve a https://console.firebase.google.com/ → Tu proyecto → Configuración del proyecto
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_PROYECTO.firebaseapp.com",
-  projectId: "TU_PROYECTO",
-  storageBucket: "TU_PROYECTO.appspot.com",
-  messagingSenderId: "TU_SENDER_ID",
-  appId: "TU_APP_ID"
+  apiKey: "AIzaSyAcTGV1hE91bSYHWa_kQjaem8S7tUmyRis",
+  authDomain: "wa-manager-e43e6.firebaseapp.com",
+  projectId: "wa-manager-e43e6",
+  storageBucket: "wa-manager-e43e6.firebasestorage.app",
+  messagingSenderId: "872860342250",
+  appId: "1:872860342250:web:9be4262873c1a57e68c493"
 };
 
 // Inicializar Firebase
