@@ -11,7 +11,7 @@ export default function ClientList({ clients, setClients, templates, logMessage 
   const handleDelete = (id) => { if(confirm("¿Eliminar cliente?")) setClients(prev => prev.filter(c => c.id !== id)); };
   const handleSendWA = (templateId) => { const template = templates.find(t => t.id === templateId); if (!template || !actionModal) return; window.open(generateWhatsAppLink(actionModal.phone, template.text.replace('{nombre}', actionModal.name.split(' ')[0])), '_blank'); logMessage(actionModal.id); setActionModal(null); };
   const filteredClients = filterTag === 'Todos' ? clients : clients.filter(c => c.tag === filterTag);
-  if (showForm) return <ClientForm onSave={handleSaveClient} editData={editClient} onCancel={() => { setShowForm(false); setEditClient(null); }} />;
+  if (showForm) return <ClientForm onSave={handleSaveClient} editData={editClient} onCancel={() => { setShowForm(false); setEditClient(null); }} isPro={isPro} clients={clients} />;
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center"><h2 className="text-2xl font-bold text-gray-800">Clientes</h2><button onClick={() => { setEditClient(null); setShowForm(true); }} className="bg-wa-green text-white px-4 py-2 rounded-lg text-sm font-semibold shadow hover:bg-wa-dark transition-colors">+ Nuevo</button></div>

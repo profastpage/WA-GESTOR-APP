@@ -1,7 +1,18 @@
 import { useState } from 'react';
-export default function ClientForm({ onSave, editData, onCancel }) {
+export default function ClientForm({ onSave, editData, onCancel, isPro, clients }) {
   const [form, setForm] = useState({ name: editData?.name || '', phone: editData?.phone || '', tag: editData?.tag || 'Nuevo', notes: editData?.notes || '' });
-  const handleSubmit = (e) => { e.preventDefault(); if (!form.name.trim() || !form.phone.trim()) { alert("Nombre y teléfono son obligatorios."); return; } onSave(form); };
+  const handleSubmit = (e) => { 
+    e.preventDefault(); 
+    if (!form.name.trim() || !form.phone.trim()) { 
+      alert("Nombre y teléfono son obligatorios."); 
+      return; 
+    }
+    if (!isPro && !editData && clients.length >= 30) {
+      alert("⚠️ Has alcanzado el límite de 30 clientes del plan Gratis. Actualiza a Pro para tener clientes ilimitados.");
+      return;
+    }
+    onSave(form); 
+  };
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3"><button onClick={onCancel} className="text-gray-500 hover:text-gray-800"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg></button><h2 className="text-2xl font-bold text-gray-800">{editData ? 'Editar Cliente' : 'Nuevo Cliente'}</h2></div>
