@@ -47,14 +47,6 @@ export default function ClientList({ clients, setClients, templates, logMessage,
   };
   
   const handleSendClick = (client) => {
-    if (!isLicensed) {
-      // En demo: enviar directamente al WhatsApp de Fast Page Pro
-      const destPhone = getDemoPhone();
-      const message = `Hola! 👋 Soy ${client.name}. Me interesa probar WA Gestor. Vi la demo y quiero activar mi licencia.`;
-      window.open(generateWhatsAppLink(destPhone, message), '_blank');
-      logMessage(client.id);
-      return;
-    }
     setPendingAction(client);
   };
   
@@ -164,20 +156,75 @@ export default function ClientList({ clients, setClients, templates, logMessage,
         )}
       </div>
       
-      {pendingAction && isLicensed && (
+      {pendingAction && (
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50" onClick={() => setPendingAction(null)}>
-          <div className="bg-white w-full max-w-lg rounded-t-3xl p-6" onClick={e => e.stopPropagation()}>
+          <div className="bg-white w-full max-w-lg rounded-t-3xl p-6 max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
             <h3 className="text-lg font-bold text-gray-800 mb-1">Enviar a {pendingAction.name}</h3>
-            <p className="text-sm text-gray-500 mb-5">{formatPhoneDisplay(pendingAction.phone)}</p>
+            <p className="text-sm text-gray-500 mb-2">{formatPhoneDisplay(pendingAction.phone)}</p>
+            
+            {!isLicensed && (
+              <div className="bg-wa-dark text-white text-xs p-3 rounded-lg mb-4">
+                📲 <strong>Demo en vivo:</strong> El mensaje se enviará a <strong>933 667 414</strong> (Fast Page Pro)
+              </div>
+            )}
+            
             <div className="space-y-3">
               {templates.map(tmpl => (
-                <button key={tmpl.id} onClick={() => handleSendWA(tmpl.id)} className="w-full text-left p-4 border border-gray-200 rounded-xl hover:border-wa-green hover:bg-wa-light transition-all group">
+                <button 
+                  key={tmpl.id} 
+                  onClick={() => {
+                    const destPhone = isLicensed ? pendingAction.phone : getDemoPhone();
+                    const message = tmpl.text.replace('{nombre}', pendingAction.name.split(' ')[0]);
+                    window.open(generateWhatsAppLink(destPhone, message), '_blank');
+                    logMessage(pendingAction.id);
+                    setPendingAction(null);
+                  }} 
+                  className="w-full text-left p-4 border border-gray-200 rounded-xl hover:border-wa-green hover:bg-wa-light transition-all group"
+                >
                   <p className="font-semibold text-sm text-wa-dark">{tmpl.name}</p>
                   <p className="text-xs text-gray-500 mt-1 line-clamp-2">{tmpl.text.replace('{nombre}', pendingAction.name.split(' ')[0])}</p>
                 </button>
               ))}
             </div>
+            
+            {!isLicensed && (
+              <div className="mt-5 pt-4 border-t border-gray-200">
+                <div className="bg-gradient-to-r from-wa-dark to-wa-green text-white p-4 rounded-xl">
+                  <p className="font-bold text-sm mb-3">🚀 Beneficios del Plan Premium - S/120 (pago único)</p>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      <span>✅</span>
+                      <span>Guarda tus propios clientes (ilimitados)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>✅</span>
+                      <span>Crea plantillas ilimitadas</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>✅</span>
+                      <span>Envía mensajes reales a tus clientes</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>✅</span>
+                      <span>Soporte prioritario por WhatsApp</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>✅</span>
+                      <span>Sin mensualidades - pago único de por vida</span>
+                    </div>
+                  </div>
+                  <a 
+                    href="https://wa.me/51933667414?text=Hola,%20quiero%20activar%20mi%20licencia%20de%20WA%20Gestor"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 block w-full bg-white text-wa-dark text-center font-bold py-3 rounded-xl hover:bg-wa-light transition-colors"
+                  >
+                    💬 Activar por WhatsApp
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
