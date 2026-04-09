@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import ActivationModal from './ActivationModal';
 
-export default function TemplateManager({ templates, setTemplates, isLicensed, onActivate }) {
+export default function TemplateManager({ templates, setTemplates, isLicensed }) {
   const [editId, setEditId] = useState(null);
   const [showActivation, setShowActivation] = useState(false);
   
@@ -53,6 +53,12 @@ export default function TemplateManager({ templates, setTemplates, isLicensed, o
         </div>
       )}
       
+      {isLicensed && (
+        <div className="bg-green-50 border border-green-200 text-green-800 p-3 rounded-xl text-xs">
+          <strong>✅ Plantillas Ilimitadas:</strong> Crea todas las plantillas que necesites para tu negocio.
+        </div>
+      )}
+      
       <div className="space-y-4">
         {templates.map(tmpl => (
           <div key={tmpl.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-3">
@@ -99,18 +105,6 @@ export default function TemplateManager({ templates, setTemplates, isLicensed, o
           </div>
         ))}
       </div>
-      
-      {isLicensed && (
-        <div className="bg-green-50 border border-green-200 text-green-800 p-4 rounded-xl text-xs leading-relaxed">
-          <strong>✅ Licencia Completa:</strong> Tienes acceso a plantillas ilimitadas. Crea todas las que necesites.
-        </div>
-      )}
-      
-      <ActivationModal 
-        isOpen={showActivation} 
-        onClose={() => setShowActivation(false)} 
-        onActivate={onActivate}
-      />
     </div>
   );
 }

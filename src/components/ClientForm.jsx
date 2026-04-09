@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import ActivationModal from './ActivationModal';
 
-export default function ClientForm({ onSave, editData, onCancel, isLicensed, onActivate }) {
+export default function ClientForm({ onSave, editData, onCancel }) {
   const [form, setForm] = useState({ name: editData?.name || '', phone: editData?.phone || '', tag: editData?.tag || 'Nuevo', notes: editData?.notes || '' });
   const [showActivation, setShowActivation] = useState(false);
   
@@ -12,7 +12,7 @@ export default function ClientForm({ onSave, editData, onCancel, isLicensed, onA
       return; 
     }
     
-    if (!isLicensed) {
+    if (!localStorage.getItem('wa_license_active') || localStorage.getItem('wa_license_active') !== 'true') {
       setShowActivation(true);
       return;
     }
@@ -86,7 +86,6 @@ export default function ClientForm({ onSave, editData, onCancel, isLicensed, onA
       <ActivationModal 
         isOpen={showActivation} 
         onClose={() => setShowActivation(false)} 
-        onActivate={onActivate}
       />
     </div>
   );
