@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export default function Layout({ children, activeView, setActiveView, isLicensed }) {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isInstallable, setIsInstallable] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const [showFloatingBtn, setShowFloatingBtn] = useState(false);
+  const timerRef = useRef(null);
+  const hasShownRef = useRef(false);
 
   // Detectar si ya está instalada
   useEffect(() => {
@@ -19,9 +21,14 @@ export default function Layout({ children, activeView, setActiveView, isLicensed
       setDeferredPrompt(e);
       setIsInstallable(true);
       
-      // Mostrar botón flotante por 5 segundos
-      setShowFloatingBtn(true);
-      setTimeout(() => setShowFloatingBtn(false), 5000);
+      // Mostrar botón flotante UNA SOLA VEZ por 5 segundos
+      if (!hasShownRef.current) {
+        hasShownRef.current = true;
+        setShowFloatingBtn(true);
+        timerRef.current = setTimeout(() => {
+          setShowFloatingBtn(false);
+        }, 5000);
+      }
     };
 
     window.addEventListener('beforeinstallprompt', handler);
@@ -32,9 +39,13 @@ export default function Layout({ children, activeView, setActiveView, isLicensed
       setIsInstallable(false);
       setShowFloatingBtn(false);
       setDeferredPrompt(null);
+      if (timerRef.current) clearTimeout(timerRef.current);
     });
 
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, []);
 
   const handleInstall = async () => {
@@ -99,10 +110,10 @@ export default function Layout({ children, activeView, setActiveView, isLicensed
               onClick={handleInstall}
               className="bg-white text-wa-dark px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 hover:bg-wa-light transition-colors"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
               </svg>
-              <span className="hidden sm:inline">Instalar App</span>
+              <span>Instalar App</span>
             </button>
           )}
           <span className="text-2xl">💬</span>
