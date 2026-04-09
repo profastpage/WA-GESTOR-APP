@@ -1,0 +1,2 @@
+/** @type {import('tailwindcss').Config} */
+export default { content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"], theme: { extend: { colors: { 'wa-green': '#25D366', 'wa-dark': '#128C7E', 'wa-light': '#DCF8C6' } } }, plugins: [], }

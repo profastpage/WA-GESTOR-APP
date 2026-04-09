@@ -1,0 +1,2 @@
+export const generateWhatsAppLink = (phone, message) => { const cleanPhone = phone.replace(/[\s\-\(\)]/g, ''); if (!cleanPhone) return '#'; return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message || '')}`; };
+export const formatPhoneDisplay = (phone) => { return phone.replace(/(\d{2,3})(\d{3})(\d{3,4})/, '$1 $2 $3'); };
