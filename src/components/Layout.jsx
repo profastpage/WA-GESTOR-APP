@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import LoginModal from './LoginModal';
 
-export default function Layout({ children, activeView, setActiveView, isLicensed, useFirebase, user, onLogout, onLogin, onExportCSV }) {
+export default function Layout({ children, activeView, setActiveView, onLogin, onLogout, user }) {
   const [showLogin, setShowLogin] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isInstallable, setIsInstallable] = useState(false);
@@ -50,37 +50,14 @@ export default function Layout({ children, activeView, setActiveView, isLicensed
     setIsInstallable(false);
   };
 
-  // Header content with login/logout buttons
-  const HeaderRight = () => (
-    <div className="flex items-center gap-2">
-      {useFirebase && user ? (
-        <>
-          <span className="text-xs text-wa-light hidden sm:inline truncate max-w-[120px]">{user.email}</span>
-          <button onClick={onExportCSV} className="bg-white/10 p-1.5 rounded-lg hover:bg-white/20 transition-colors" title="Exportar CSV">📥</button>
-          <button onClick={onLogout} className="bg-white/10 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-white/20 transition-colors">🚪 Salir</button>
-        </>
-      ) : (
-        <button onClick={() => setShowLogin(true)} className="bg-white/10 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-white/20 transition-colors">🔑 Iniciar Sesión</button>
-      )}
-      {isInstallable && (
-        <button onClick={handleInstall} className="bg-white text-wa-dark px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 hover:bg-wa-light transition-colors">
-          <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-          <span className="hidden sm:inline">Instalar</span>
-        </button>
-      )}
-      <span className="text-2xl">💬</span>
-    </div>
-  );
-
   if (isInstalled) {
     return (
       <div className="flex flex-col h-screen bg-gray-50">
         <header className="bg-wa-dark text-white p-4 shadow-lg flex items-center justify-between">
           <div><h1 className="text-xl font-bold">WA Manager</h1><p className="text-xs text-wa-light opacity-80">Gestión de Clientes</p></div>
-          <HeaderRight />
+          <span className="text-2xl">💬</span>
         </header>
         <main className="flex-1 overflow-y-auto p-4 pb-24">{children}</main>
-        {showLogin && <LoginModal onClose={() => setShowLogin(false)} onLogin={onLogin} />}
         <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center h-16 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">
           {['dashboard', 'clients', 'templates'].map(view => (
             <button key={view} onClick={() => setActiveView(view)} className={`flex flex-col items-center justify-center w-full h-full transition-colors ${activeView === view ? 'text-wa-dark' : 'text-gray-400'}`}>
@@ -97,7 +74,16 @@ export default function Layout({ children, activeView, setActiveView, isLicensed
     <div className="flex flex-col h-screen bg-gray-50 relative">
       <header className="bg-wa-dark text-white p-4 shadow-lg flex items-center justify-between shrink-0">
         <div><h1 className="text-xl font-bold">WA Manager</h1><p className="text-xs text-wa-light opacity-80">Gestión de Clientes</p></div>
-        <HeaderRight />
+        <div className="flex items-center gap-2">
+          <button onClick={() => setShowLogin(true)} className="bg-white/10 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-white/20 transition-colors">🔑 Iniciar Sesión</button>
+          {isInstallable && (
+            <button onClick={handleInstall} className="bg-white text-wa-dark px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 hover:bg-wa-light transition-colors">
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+              <span>Instalar App</span>
+            </button>
+          )}
+          <span className="text-2xl">💬</span>
+        </div>
       </header>
       <main className="flex-1 overflow-y-auto p-4 pb-24">{children}</main>
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} onLogin={onLogin} />}
