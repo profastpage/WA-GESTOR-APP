@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import ClientList from './components/ClientList';
 import TemplateManager from './components/TemplateManager';
+import SuperAdminPanel from './components/SuperAdminPanel';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useAuth } from './hooks/useAuth';
+import { useCRM } from './hooks/useCRM';
+import { exportService } from './services/firestore';
 
 const DEMO_PHONE = '933667414';
 
@@ -26,41 +29,73 @@ export default function App() {
     return localStorage.getItem('wa_license_active') === 'true';
   });
 
-  // Firebase auth (opcional - se activa al iniciar sesión)
-  const { user, login, register, logout } = useAuth();
-
+  // Firebase auth
+  const { user, login, register, loginWithGoogle, logout, isSuperAdmin } = useAuth();
+  
+  // LocalStorage mode (default)
   const [clients, setClients] = useLocalStorage('wa_clients', []);
-  const [templates, setTemplates] = useLocalStorage('wa_templates', []);        
-
-  const displayClients = isLicensed ? clients : DEMO_CLIENTS;
-  const displayTemplates = isLicensed ? templates : DEMO_TEMPLATES;
-
+  const [templates, setTemplates] = useLocalStorage('wa_templates', []);
   const [messageLog, setMessageLog] = useLocalStorage('wa_log', []);
+
+  // Firebase CRM mode
+  const crm = useCRM(!isSuperAdmin && user?.uid ? user.uid : '');
+
+  // Initialize default data for new users
+  useEffect(() => {
+    if (!isSuperAdmin && user && crm.clients.length === 0 && crm.templates.length === 0) {
+      crm.initDefaultData().catch(() => {});
+    }
+  }, [isSuperAdmin, user, crm.loading]);
+
+  // Use Firebase data if logged in (non-admin), otherwise use localStorage
+  const displayClients = !isSuperAdmin && user ? crm.clients : clients;
+  const displayTemplates = !isSuperAdmin && user ? crm.templates : templates;
+
   const logMessage = (clientId) => setMessageLog(prev => [...prev, { clientId, timestamp: Date.now() }]);
 
-  const handleLogin = async () => {
-    // Login trigger - user will use the modal
+  // Firebase send message
+  const firebaseSendWA = async (clientId, templateId, templateText, clientName) => {
+    const message = (templateText || '').replace('{nombre}', clientName.split(' ')[0]);
+    await crm.sendMessage(clientId, templateId, message);
   };
 
+  // Handle logout
   const handleLogout = async () => {
     await logout();
   };
 
+  // Export CSV
+  const handleExportCSV = () => {
+    const csv = exportService.toCSV(displayClients);
+    exportService.download(csv, `clientes_${new Date().toISOString().split('T')[0]}.csv`);
+  };
+
+  // If super admin, show admin panel
+  if (isSuperAdmin) {
+    return <SuperAdminPanel user={user} onLogout={handleLogout} />;
+  }
+
   const renderView = () => {
     const props = {
       clients: displayClients,
-      setClients,
+      setClients: user ? undefined : setClients,
       templates: displayTemplates,
-      setTemplates,
+      setTemplates: user ? undefined : setTemplates,
       logMessage,
-      isLicensed
+      isLicensed,
+      useFirebase: !!user,
+      onSendWA: user ? firebaseSendWA : undefined,
+      onSaveClient: user ? crm.addClient : undefined,
+      onDeleteClient: user ? crm.deleteClient : undefined,
+      onSaveTemplate: user ? crm.addTemplate : undefined,
+      onDeleteTemplate: user ? crm.deleteTemplate : undefined,
     };
 
     switch (activeView) {
-      case 'dashboard': return <Dashboard clients={displayClients} messageLog={messageLog} isLicensed={isLicensed} />;
+      case 'dashboard': return <Dashboard clients={displayClients} messageLog={messageLog} isLicensed={isLicensed} useFirebase={!!user} stats={user ? crm.stats : null} loading={user ? crm.loading : false} />;
       case 'clients': return <ClientList {...props} />;
-      case 'templates': return <TemplateManager templates={displayTemplates} setTemplates={setTemplates} isLicensed={isLicensed} />;
-      default: return <Dashboard clients={displayClients} messageLog={messageLog} isLicensed={isLicensed} />;
+      case 'templates': return <TemplateManager templates={displayTemplates} setTemplates={user ? undefined : setTemplates} isLicensed={isLicensed} useFirebase={!!user} onSave={crm.addTemplate} onDelete={crm.deleteTemplate} />;
+      default: return <Dashboard clients={displayClients} messageLog={messageLog} isLicensed={isLicensed} useFirebase={!!user} stats={user ? crm.stats : null} loading={user ? crm.loading : false} />;
     }
   };
 
@@ -69,8 +104,9 @@ export default function App() {
       activeView={activeView} 
       setActiveView={setActiveView} 
       isLicensed={isLicensed}
-      onLogin={handleLogin}
+      onLogin={() => {}}
       onLogout={handleLogout}
+      onExportCSV={handleExportCSV}
       user={user}
     >
       <div className="page-enter">{renderView()}</div>

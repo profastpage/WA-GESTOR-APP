@@ -1,12 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { auth } from '../firebase';
-import { 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  signOut, 
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
   onAuthStateChanged,
-  updateProfile
+  updateProfile,
+  signInWithPopup,
+  GoogleAuthProvider
 } from 'firebase/auth';
+
+const SUPER_ADMIN_EMAIL = 'admin@wamanger.com';
 
 export function useAuth() {
   const [user, setUser] = useState(null);
@@ -46,6 +50,19 @@ export function useAuth() {
     }
   }, []);
 
+  const loginWithGoogle = useCallback(async () => {
+    try {
+      setError(null);
+      setLoading(true);
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (err) {
+      setError(getAuthError(err.code));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await signOut(auth);
@@ -54,7 +71,9 @@ export function useAuth() {
     }
   }, []);
 
-  return { user, loading, error, login, register, logout };
+  const isSuperAdmin = user?.email === SUPER_ADMIN_EMAIL;
+
+  return { user, loading, error, login, register, loginWithGoogle, logout, isSuperAdmin };
 }
 
 function getAuthError(code) {
@@ -65,7 +84,9 @@ function getAuthError(code) {
     'auth/user-not-found': 'Usuario no encontrado',
     'auth/wrong-password': 'Contraseña incorrecta',
     'auth/too-many-requests': 'Demasiados intentos. Intenta más tarde',
-    'auth/network-request-failed': 'Error de conexión. Verifica tu internet'
+    'auth/network-request-failed': 'Error de conexión. Verifica tu internet',
+    'auth/popup-closed-by-user': 'Inicio de sesión cancelado',
+    'auth/cancelled-popup-request': 'Otra ventana emergente está abierta'
   };
   return errors[code] || 'Error de autenticación';
 }
