@@ -1,4 +1,4 @@
-const CACHE_NAME = 'wa-manager-v4';
+const CACHE_NAME = 'wa-manager-v5';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -9,7 +9,7 @@ const urlsToCache = [
 
 // Instalación
 self.addEventListener('install', event => {
-  console.log('[SW] Instalando v4...');
+  console.log('[SW] Instalando v5...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
@@ -23,7 +23,7 @@ self.addEventListener('install', event => {
 
 // Activación
 self.addEventListener('activate', event => {
-  console.log('[SW] Activando v4...');
+  console.log('[SW] Activando v5...');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(

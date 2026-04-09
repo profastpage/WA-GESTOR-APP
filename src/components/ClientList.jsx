@@ -48,7 +48,11 @@ export default function ClientList({ clients, setClients, templates, logMessage,
   
   const handleSendClick = (client) => {
     if (!isLicensed) {
-      setShowActivation(true);
+      // En demo: enviar directamente al WhatsApp de Fast Page Pro
+      const destPhone = getDemoPhone();
+      const message = `Hola! 👋 Soy ${client.name}. Me interesa probar WA Gestor. Vi la demo y quiero activar mi licencia.`;
+      window.open(generateWhatsAppLink(destPhone, message), '_blank');
+      logMessage(client.id);
       return;
     }
     setPendingAction(client);

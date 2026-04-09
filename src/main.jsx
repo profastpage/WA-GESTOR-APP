@@ -10,11 +10,15 @@ if (urlParams.get('license') === 'true') {
   window.history.replaceState({}, document.title, window.location.pathname);
 }
 
-// Registrar Service Worker
+// Registrar Service Worker con actualización forzada
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' })
-      .then(reg => console.log('SW registrado:', reg.scope))
+    navigator.serviceWorker.register('/sw.js?v=' + Date.now(), { scope: '/' })
+      .then(reg => {
+        console.log('SW registrado:', reg.scope);
+        // Forzar actualización inmediata
+        reg.update();
+      })
       .catch(err => console.error('SW error:', err));
   });
 }
