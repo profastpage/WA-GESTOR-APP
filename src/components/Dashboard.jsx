@@ -1,4 +1,4 @@
-export default function Dashboard({ clients, messageLog, isLicensed, onActivate }) {
+export default function Dashboard({ clients, messageLog, isLicensed }) {
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const messagesToday = messageLog.filter(log => log.timestamp >= today.getTime()).length;
   const tagCounts = clients.reduce((acc, client) => { acc[client.tag] = (acc[client.tag] || 0) + 1; return acc; }, {});
@@ -59,6 +59,12 @@ export default function Dashboard({ clients, messageLog, isLicensed, onActivate 
           ))}
         </div>
       </div>
+      
+      {!isLicensed && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-xl text-xs leading-relaxed">
+          <strong>📱 Demo en tiempo real:</strong> Los mensajes de prueba se envían a <strong>933 667 414</strong> (Fast Page Pro). Activa tu licencia para enviar a tus propios clientes.
+        </div>
+      )}
       
       <div className="bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-xl text-xs leading-relaxed"><strong>🔒 Modo Seguro:</strong> Cumple con los Términos de WhatsApp. Se abre tu app oficial para confirmación manual.</div>
     </div>

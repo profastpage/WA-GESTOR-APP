@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import ClientForm from './ClientForm';
 import ActivationModal from './ActivationModal';
-import { generateWhatsAppLink, formatPhoneDisplay } from '../utils/whatsapp';
+import { generateWhatsAppLink, formatPhoneDisplay, isDemoPhone, getDemoPhone } from '../utils/whatsapp';
 
-export default function ClientList({ clients, setClients, templates, logMessage, isLicensed, onActivate }) {
+export default function ClientList({ clients, setClients, templates, logMessage, isLicensed }) {
   const [showForm, setShowForm] = useState(false);
   const [editClient, setEditClient] = useState(null);
   const [filterTag, setFilterTag] = useState('Todos');
@@ -36,7 +36,12 @@ export default function ClientList({ clients, setClients, templates, logMessage,
   const handleSendWA = (templateId) => { 
     const template = templates.find(t => t.id === templateId); 
     if (!template || !pendingAction) return; 
-    window.open(generateWhatsAppLink(pendingAction.phone, template.text.replace('{nombre}', pendingAction.name.split(' ')[0])), '_blank'); 
+    
+    // Usar el número de destino real (demo: 933667414, licencia: el del cliente)
+    const destPhone = isLicensed ? pendingAction.phone : getDemoPhone();
+    const message = template.text.replace('{nombre}', pendingAction.name.split(' ')[0]);
+    
+    window.open(generateWhatsAppLink(destPhone, message), '_blank'); 
     logMessage(pendingAction.id); 
     setPendingAction(null); 
   };
@@ -95,6 +100,12 @@ export default function ClientList({ clients, setClients, templates, logMessage,
         </div>
       )}
       
+      {isLicensed && (
+        <div className="bg-green-50 border border-green-200 text-green-800 p-3 rounded-xl text-xs">
+          <strong>✅ Licencia Activa:</strong> Tienes acceso completo. Los mensajes se envían directamente a tus clientes.
+        </div>
+      )}
+      
       <div className="space-y-3">
         {filteredClients.length === 0 ? (
           <div className="text-center py-10 text-gray-400">
@@ -113,6 +124,9 @@ export default function ClientList({ clients, setClients, templates, logMessage,
                 </div>
                 <p className="text-sm text-gray-500 mt-1">{formatPhoneDisplay(client.phone)}</p>
                 {client.notes && <p className="text-xs text-gray-400 mt-1 truncate">📝 {client.notes}</p>}
+                {!isLicensed && isDemoPhone(client.phone) && (
+                  <p className="text-[10px] text-wa-green mt-1 font-semibold">📲 Demo → Se envía a 933 667 414</p>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <button 
@@ -167,7 +181,6 @@ export default function ClientList({ clients, setClients, templates, logMessage,
       <ActivationModal 
         isOpen={showActivation} 
         onClose={() => setShowActivation(false)} 
-        onActivate={onActivate}
       />
     </div>
   );
