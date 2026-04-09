@@ -3,16 +3,14 @@ import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import './index.css';
 
-// Registrar Service Worker para PWA
+// Registrar Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' })
-      .then(reg => console.log('SW registrado:', reg.scope))
-      .catch(err => console.error('SW error:', err));
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
   });
 }
 
-// Error boundary para capturar errores
+// Error Boundary
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -24,14 +22,13 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-          <h1>⚠️ Error en la aplicación</h1>
-          <pre style={{ background: '#f0f0f0', padding: '10px', overflow: 'auto' }}>
-            {this.state.error?.toString()}
-          </pre>
-          <button onClick={() => window.location.reload()} style={{ marginTop: '10px', padding: '10px 20px' }}>
-            Recargar página
-          </button>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+          <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md text-center">
+            <p className="text-4xl mb-4">⚠️</p>
+            <h1 className="text-xl font-bold text-gray-800 mb-2">Algo salió mal</h1>
+            <pre className="text-xs text-gray-500 bg-gray-100 p-3 rounded-lg mb-4 overflow-auto max-h-32">{this.state.error?.toString()}</pre>
+            <button onClick={() => window.location.reload()} className="bg-wa-dark text-white px-6 py-2 rounded-lg hover:bg-wa-green transition-colors">Recargar</button>
+          </div>
         </div>
       );
     }

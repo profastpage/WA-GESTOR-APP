@@ -1,134 +1,102 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from './hooks/useAuth';
-import { useCRM } from './hooks/useCRM';
-import Login from './components/Login';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import ClientList from './components/ClientList';
 import TemplateManager from './components/TemplateManager';
-import FollowUpManager from './components/FollowUpManager';
+import { useLocalStorage } from './hooks/useLocalStorage';
+import { useAuth } from './hooks/useAuth';
+import { useCRM } from './hooks/useCRM';
+import { exportService } from './services/firestore';
+
+const DEMO_PHONE = '933667414';
+
+const DEMO_CLIENTS = [
+  { id: 'demo1', name: 'María Rodríguez', phone: DEMO_PHONE, tag: 'Nuevo', notes: 'Interesada en producto premium' },
+  { id: 'demo2', name: 'Carlos Sánchez', phone: DEMO_PHONE, tag: 'Pendiente', notes: 'Solicita cotización' },
+  { id: 'demo3', name: 'Ana Flores', phone: DEMO_PHONE, tag: 'VIP', notes: 'Cliente frecuente' }
+];
+
+const DEMO_TEMPLATES = [
+  { id: 'demo_t1', name: 'Saludo', text: 'Hola {nombre}, ¿cómo puedo ayudarte hoy?' },
+  { id: 'demo_t2', name: 'Precio', text: 'Hola {nombre}, el precio del producto es S/XX. ¿Te interesa?' },
+  { id: 'demo_t3', name: 'Despedida', text: 'Gracias por tu contacto {nombre}, que tengas un excelente día.' }
+];
 
 export default function App() {
-  const { user, loading: authLoading, error: authError, login, register, logout } = useAuth();
   const [activeView, setActiveView] = useState('dashboard');
-  const [appError, setAppError] = useState(null);
+  const [isLicensed, setIsLicensed] = useState(() => {
+    return localStorage.getItem('wa_license_active') === 'true';
+  });
+
+  // Firebase auth - optional CRM mode
+  const { user, login: firebaseLogin, register: firebaseRegister, logout: firebaseLogout } = useAuth();
+  const [useFirebase, setUseFirebase] = useState(false);
   
-  // CRM solo si hay usuario autenticado
-  const crm = useCRM(user?.uid || '');
+  // LocalStorage mode (default)
+  const [clients, setClients] = useLocalStorage('wa_clients', []);
+  const [templates, setTemplates] = useLocalStorage('wa_templates', []);
+  const [messageLog, setMessageLog] = useLocalStorage('wa_log', []);
 
-  // Inicializar datos por defecto para nuevos usuarios
+  // Firebase CRM mode
+  const crm = useCRM(useFirebase && user?.uid ? user.uid : '');
+
+  // Sync Firebase data when user logs in
   useEffect(() => {
-    if (user && !crm.loading && crm.clients.length === 0 && crm.templates.length === 0) {
-      crm.initDefaultData().catch(err => {
-        console.error('Error inicializando datos:', err);
-        setAppError('Error al inicializar: ' + err.message);
-      });
+    if (useFirebase && user && crm.clients.length === 0 && crm.templates.length === 0) {
+      crm.initDefaultData().catch(() => {});
     }
-  }, [user, crm.loading]);
+  }, [useFirebase, user, crm.loading]);
 
-  // Mostrar error si hay problema
-  if (appError) {
-    return (
-      <div style={{ padding: '20px', fontFamily: 'sans-serif', textAlign: 'center' }}>
-        <h1>⚠️ Error</h1>
-        <p>{appError}</p>
-        <button onClick={() => window.location.reload()}>Reintentar</button>
-      </div>
-    );
-  }
+  // Use Firebase data if logged in, otherwise use localStorage
+  const displayClients = useFirebase && user ? crm.clients : clients;
+  const displayTemplates = useFirebase && user ? crm.templates : templates;
 
-  // Mostrar login si no hay usuario
-  if (!user) {
-    return (
-      <Login 
-        onLogin={login} 
-        onRegister={register} 
-        loading={authLoading} 
-        error={authError} 
-      />
-    );
-  }
+  const logMessage = (clientId) => setMessageLog(prev => [...prev, { clientId, timestamp: Date.now() }]);
 
-  // Funciones de clientes
-  const handleSaveClient = async (clientData) => {
-    try {
-      if (clientData.id) {
-        await crm.updateClient(clientData.id, clientData);
-      } else {
-        await crm.addClient(clientData);
-      }
-    } catch (err) {
-      console.error('Error guardando cliente:', err);
-    }
-  };
-
-  const handleDeleteClient = async (clientId) => {
-    if (confirm('¿Eliminar este cliente?')) {
-      await crm.deleteClient(clientId);
-    }
-  };
-
-  const handleSendWA = async (clientId, templateId, templateText, clientName) => {
-    const message = templateText.replace('{nombre}', clientName.split(' ')[0]);
+  // Firebase send message
+  const firebaseSendWA = async (clientId, templateId, templateText, clientName) => {
+    const message = (templateText || '').replace('{nombre}', clientName.split(' ')[0]);
     await crm.sendMessage(clientId, templateId, message);
   };
 
-  // Funciones de plantillas
-  const handleSaveTemplate = async (templateData) => {
-    if (templateData.id) {
-      await crm.updateTemplate(templateData.id, templateData);
-    } else {
-      await crm.addTemplate(templateData);
-    }
+  // Handle login - switch to Firebase mode
+  const handleLogin = () => {
+    setUseFirebase(true);
   };
 
-  const handleDeleteTemplate = async (templateId) => {
-    if (confirm('¿Eliminar esta plantilla?')) {
-      await crm.deleteTemplate(templateId);
-    }
+  // Handle logout - go back to demo mode
+  const handleLogout = () => {
+    firebaseLogout();
+    setUseFirebase(false);
   };
 
-  // Exportar CSV
+  // Export CSV
   const handleExportCSV = () => {
-    crm.exportToCSV();
+    const csv = exportService.toCSV(displayClients);
+    exportService.download(csv, `clientes_${new Date().toISOString().split('T')[0]}.csv`);
   };
 
-  // Renderizar vista
   const renderView = () => {
+    const props = {
+      clients: displayClients,
+      setClients: useFirebase ? undefined : setClients,
+      templates: displayTemplates,
+      setTemplates: useFirebase ? undefined : setTemplates,
+      logMessage,
+      isLicensed,
+      useFirebase,
+      onSendWA: useFirebase ? firebaseSendWA : undefined,
+      onSaveClient: useFirebase ? crm.addClient : undefined,
+      onDeleteClient: useFirebase ? crm.deleteClient : undefined,
+      onSaveTemplate: useFirebase ? crm.addTemplate : undefined,
+      onDeleteTemplate: useFirebase ? crm.deleteTemplate : undefined,
+    };
+
     switch (activeView) {
-      case 'dashboard':
-        return <Dashboard stats={crm.stats} loading={crm.loading} />;
-      case 'clients':
-        return (
-          <ClientList 
-            clients={crm.clients}
-            loading={crm.loading}
-            onSaveClient={handleSaveClient}
-            onDeleteClient={handleDeleteClient}
-            onSendWA={handleSendWA}
-            templates={crm.templates}
-          />
-        );
-      case 'templates':
-        return (
-          <TemplateManager 
-            templates={crm.templates}
-            onSave={handleSaveTemplate}
-            onDelete={handleDeleteTemplate}
-          />
-        );
-      case 'followups':
-        return (
-          <FollowUpManager 
-            followUps={crm.followUps}
-            clients={crm.clients}
-            onAdd={crm.addFollowUp}
-            onComplete={crm.completeFollowUp}
-            onDelete={crm.deleteFollowUp}
-          />
-        );
-      default:
-        return <Dashboard stats={crm.stats} loading={crm.loading} />;
+      case 'dashboard': return <Dashboard clients={displayClients} messageLog={messageLog} isLicensed={isLicensed} useFirebase={useFirebase} stats={useFirebase ? crm.stats : null} loading={useFirebase ? crm.loading : false} />;
+      case 'clients': return <ClientList {...props} />;
+      case 'templates': return <TemplateManager templates={displayTemplates} setTemplates={useFirebase ? undefined : setTemplates} isLicensed={isLicensed} useFirebase={useFirebase} onSave={crm.addTemplate} onDelete={crm.deleteTemplate} />;
+      default: return <Dashboard clients={displayClients} messageLog={messageLog} isLicensed={isLicensed} useFirebase={useFirebase} stats={useFirebase ? crm.stats : null} loading={useFirebase ? crm.loading : false} />;
     }
   };
 
@@ -136,8 +104,11 @@ export default function App() {
     <Layout 
       activeView={activeView} 
       setActiveView={setActiveView}
+      isLicensed={isLicensed}
+      useFirebase={useFirebase}
       user={user}
-      onLogout={logout}
+      onLogout={handleLogout}
+      onLogin={handleLogin}
       onExportCSV={handleExportCSV}
     >
       <div className="page-enter">{renderView()}</div>
