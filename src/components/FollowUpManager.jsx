@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 
 export default function FollowUpManager({ followUps, clients, onAdd, onComplete, onDelete }) {
   const [showForm, setShowForm] = useState(false);
@@ -29,7 +27,7 @@ export default function FollowUpManager({ followUps, clients, onAdd, onComplete,
 
   const getClientName = (clientId) => {
     const client = clients.find(c => c.id === clientId);
-    return client?.name || 'Cliente eliminado';
+    return client?.name || 'Cliente';
   };
 
   const getPriorityColor = (priority) => {
@@ -42,89 +40,55 @@ export default function FollowUpManager({ followUps, clients, onAdd, onComplete,
   };
 
   const isOverdue = (dueDate) => {
-    return new Date(dueDate) < new Date();
+    if (!dueDate) return false;
+    const date = dueDate.toDate ? dueDate.toDate() : new Date(dueDate);
+    return date < new Date();
+  };
+
+  const formatDate = (dueDate) => {
+    if (!dueDate) return '';
+    const date = dueDate.toDate ? dueDate.toDate() : new Date(dueDate);
+    return date.toLocaleDateString('es', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   };
 
   if (showForm) {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
-          <button onClick={() => setShowForm(false)} className="text-gray-500 hover:text-gray-800">
-            ← Volver
-          </button>
+          <button onClick={() => setShowForm(false)} className="text-gray-500 hover:text-gray-800">← Volver</button>
           <h2 className="text-2xl font-bold text-gray-800">Nuevo Seguimiento</h2>
         </div>
-
         <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Cliente *</label>
-            <select
-              value={form.clientId}
-              onChange={(e) => setForm({...form, clientId: e.target.value})}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-wa-green focus:border-transparent outline-none bg-white"
-              required
-            >
+            <select value={form.clientId} onChange={(e) => setForm({...form, clientId: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-wa-green outline-none bg-white" required>
               <option value="">Seleccionar cliente...</option>
-              {clients.map(c => (
-                <option key={c.id} value={c.id}>{c.name} - {c.phone}</option>
-              ))}
+              {clients.map(c => <option key={c.id} value={c.id}>{c.name} - {c.phone}</option>)}
             </select>
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Título *</label>
-            <input
-              type="text"
-              value={form.title}
-              onChange={(e) => setForm({...form, title: e.target.value})}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-wa-green focus:border-transparent outline-none"
-              placeholder="Ej: Llamar para seguimiento"
-              required
-            />
+            <input type="text" value={form.title} onChange={(e) => setForm({...form, title: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-wa-green outline-none" placeholder="Ej: Llamar para seguimiento" required />
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-            <textarea
-              value={form.description}
-              onChange={(e) => setForm({...form, description: e.target.value})}
-              rows="3"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-wa-green focus:border-transparent outline-none resize-none"
-              placeholder="Detalles del seguimiento..."
-            />
+            <textarea value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} rows="3" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-wa-green outline-none resize-none" placeholder="Detalles del seguimiento..." />
           </div>
-
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Fecha límite *</label>
-              <input
-                type="datetime-local"
-                value={form.dueDate}
-                onChange={(e) => setForm({...form, dueDate: e.target.value})}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-wa-green focus:border-transparent outline-none"
-                required
-              />
+              <input type="datetime-local" value={form.dueDate} onChange={(e) => setForm({...form, dueDate: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-wa-green outline-none" required />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Prioridad</label>
-              <select
-                value={form.priority}
-                onChange={(e) => setForm({...form, priority: e.target.value})}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-wa-green focus:border-transparent outline-none bg-white"
-              >
+              <select value={form.priority} onChange={(e) => setForm({...form, priority: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-wa-green outline-none bg-white">
                 <option value="baja">🟢 Baja</option>
                 <option value="media">🟡 Media</option>
                 <option value="alta">🔴 Alta</option>
               </select>
             </div>
           </div>
-
-          <button
-            type="submit"
-            className="w-full bg-wa-dark text-white font-semibold py-3 rounded-xl hover:bg-wa-green transition-colors shadow-lg"
-          >
-            Crear Seguimiento
-          </button>
+          <button type="submit" className="w-full bg-wa-dark text-white font-semibold py-3 rounded-xl hover:bg-wa-green transition-colors shadow-lg">Crear Seguimiento</button>
         </form>
       </div>
     );
@@ -137,67 +101,31 @@ export default function FollowUpManager({ followUps, clients, onAdd, onComplete,
           <h2 className="text-2xl font-bold text-gray-800">Seguimiento</h2>
           <p className="text-sm text-gray-500">{followUps.length} pendientes</p>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-wa-green text-white px-4 py-2 rounded-lg text-sm font-semibold shadow hover:bg-wa-dark transition-colors"
-        >
-          + Nuevo
-        </button>
+        <button onClick={() => setShowForm(true)} className="bg-wa-green text-white px-4 py-2 rounded-lg text-sm font-semibold shadow hover:bg-wa-dark transition-colors">+ Nuevo</button>
       </div>
-
       {followUps.length === 0 ? (
         <div className="text-center py-10 text-gray-400">
           <p className="text-4xl mb-2">✅</p>
           <p className="font-medium">Sin seguimientos pendientes</p>
-          <p className="text-sm mt-1">¡Excelente! Estás al día</p>
         </div>
       ) : (
         <div className="space-y-3">
           {followUps.map(fu => (
-            <div
-              key={fu.id}
-              className={`bg-white p-4 rounded-xl shadow-sm border-l-4 ${
-                isOverdue(fu.dueDate) ? 'border-red-500' : 'border-wa-green'
-              }`}
-            >
+            <div key={fu.id} className={`bg-white p-4 rounded-xl shadow-sm border-l-4 ${isOverdue(fu.dueDate) ? 'border-red-500' : 'border-wa-green'}`}>
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="font-semibold text-gray-800">{fu.title}</h3>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border ${getPriorityColor(fu.priority)}`}>
-                      {fu.priority}
-                    </span>
-                    {isOverdue(fu.dueDate) && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase bg-red-100 text-red-700">
-                        Vencido
-                      </span>
-                    )}
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border ${getPriorityColor(fu.priority)}`}>{fu.priority}</span>
+                    {isOverdue(fu.dueDate) && <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase bg-red-100 text-red-700">Vencido</span>}
                   </div>
-                  <p className="text-sm text-gray-500 mt-1">
-                    👤 {getClientName(fu.clientId)}
-                  </p>
-                  {fu.description && (
-                    <p className="text-xs text-gray-400 mt-1">{fu.description}</p>
-                  )}
-                  <p className={`text-xs mt-2 ${isOverdue(fu.dueDate) ? 'text-red-500 font-semibold' : 'text-gray-400'}`}>
-                    📅 {format(new Date(fu.dueDate), "PPP 'a las' HH:mm", { locale: es })}
-                  </p>
+                  <p className="text-sm text-gray-500 mt-1">👤 {getClientName(fu.clientId)}</p>
+                  {fu.description && <p className="text-xs text-gray-400 mt-1">{fu.description}</p>}
+                  <p className={`text-xs mt-2 ${isOverdue(fu.dueDate) ? 'text-red-500 font-semibold' : 'text-gray-400'}`}>📅 {formatDate(fu.dueDate)}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => onComplete(fu.id)}
-                    className="bg-green-100 text-green-600 p-2 rounded-lg hover:bg-green-200 transition-colors"
-                    title="Marcar como completado"
-                  >
-                    ✅
-                  </button>
-                  <button
-                    onClick={() => onDelete(fu.id)}
-                    className="bg-gray-100 text-red-400 p-2 rounded-lg hover:bg-red-50 transition-colors"
-                    title="Eliminar"
-                  >
-                    🗑️
-                  </button>
+                  <button onClick={() => onComplete(fu.id)} className="bg-green-100 text-green-600 p-2 rounded-lg hover:bg-green-200 transition-colors" title="Completado">✅</button>
+                  <button onClick={() => onDelete(fu.id)} className="bg-gray-100 text-red-400 p-2 rounded-lg hover:bg-red-50 transition-colors" title="Eliminar">🗑️</button>
                 </div>
               </div>
             </div>
