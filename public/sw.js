@@ -1,4 +1,4 @@
-const CACHE_NAME = 'wa-manager-v5';
+const CACHE_NAME = 'wa-manager-v6';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -7,56 +7,50 @@ const urlsToCache = [
   '/icon-512.png'
 ];
 
-// Instalación
+// Instalación - forzar actualización inmediata
 self.addEventListener('install', event => {
-  console.log('[SW] Instalando v5...');
+  console.log('[SW] Instalando v6 - FORCE UPDATE...');
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('[SW] Cache abierto');
-        return cache.addAll(urlsToCache);
-      })
+      .then(cache => cache.addAll(urlsToCache))
       .then(() => self.skipWaiting())
-      .then(() => console.log('[SW] Instalación completada'))
   );
 });
 
-// Activación
+// Activación - limpiar TODO el caché viejo
 self.addEventListener('activate', event => {
-  console.log('[SW] Activando v5...');
+  console.log('[SW] Activando v6 - LIMPIANDO CACHE...');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames
           .filter(name => name !== CACHE_NAME)
           .map(name => {
-            console.log('[SW] Eliminando cache:', name);
+            console.log('[SW] Borrando cache viejo:', name);
             return caches.delete(name);
           })
       );
     }).then(() => self.clients.claim())
-      .then(() => console.log('[SW] Activación completada'))
   );
 });
 
-// Fetch - estrategia Cache First, luego Network
+// Fetch - Network First (prioridad a contenido nuevo)
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request)
+    fetch(event.request)
       .then(response => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request).then(response => {
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
+        // Guardar en caché para uso offline
+        if (response && response.status === 200) {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then(cache => {
             cache.put(event.request, responseToCache);
           });
-          return response;
-        });
+        }
+        return response;
+      })
+      .catch(() => {
+        // Si no hay internet, usar caché
+        return caches.match(event.request);
       })
   );
 });
