@@ -3,31 +3,58 @@ import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import ClientList from './components/ClientList';
 import TemplateManager from './components/TemplateManager';
-import Pricing from './components/Pricing';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { useProLicense } from './hooks/useProLicense';
+
+const DEMO_CLIENTS = [
+  { id: 'demo1', name: 'María Rodríguez', phone: '987654321', tag: 'Nuevo', notes: 'Interesada en producto premium' },
+  { id: 'demo2', name: 'Carlos Sánchez', phone: '912345678', tag: 'Pendiente', notes: 'Solicita cotización' },
+  { id: 'demo3', name: 'Ana Flores', phone: '998877665', tag: 'VIP', notes: 'Cliente frecuente' }
+];
+
+const DEMO_TEMPLATES = [
+  { id: 'demo_t1', name: 'Saludo', text: 'Hola {nombre}, ¿cómo puedo ayudarte hoy?' },
+  { id: 'demo_t2', name: 'Precio', text: 'Hola {nombre}, el precio del producto es $XX. ¿Te interesa?' },
+  { id: 'demo_t3', name: 'Despedida', text: 'Gracias por tu contacto {nombre}, que tengas un excelente día.' }
+];
 
 export default function App() {
   const [activeView, setActiveView] = useState('dashboard');
-  const { isPro } = useProLicense();
+  const [isLicensed, setIsLicensed] = useState(() => {
+    return localStorage.getItem('wa_license_active') === 'true';
+  });
+  
   const [clients, setClients] = useLocalStorage('wa_clients', []);
-  const maxTemplates = isPro ? Infinity : 3;
-  const [templates, setTemplates] = useLocalStorage('wa_templates', [
-    { id: '1', name: 'Saludo', text: 'Hola {nombre}, ¿cómo puedo ayudarte hoy?' },
-    { id: '2', name: 'Precio', text: 'Hola {nombre}, el precio del producto es $XX. ¿Te interesa?' },
-    { id: '3', name: 'Despedida', text: 'Gracias por tu contacto {nombre}, que tengas un excelente día.' }
-  ]);
+  const [templates, setTemplates] = useLocalStorage('wa_templates', []);
+  
+  const displayClients = isLicensed ? clients : DEMO_CLIENTS;
+  const displayTemplates = isLicensed ? templates : DEMO_TEMPLATES;
+  
   const [messageLog, setMessageLog] = useLocalStorage('wa_log', []);
   const logMessage = (clientId) => setMessageLog(prev => [...prev, { clientId, timestamp: Date.now() }]);
+  
+  const handleActivateLicense = () => {
+    setIsLicensed(true);
+    localStorage.setItem('wa_license_active', 'true');
+  };
+
   const renderView = () => {
-    const props = { clients, setClients, templates, setTemplates, logMessage, isPro, maxTemplates };
+    const props = { 
+      clients: displayClients, 
+      setClients, 
+      templates: displayTemplates, 
+      setTemplates, 
+      logMessage, 
+      isLicensed,
+      onActivate: handleActivateLicense
+    };
+    
     switch (activeView) {
-      case 'dashboard': return <Dashboard clients={clients} messageLog={messageLog} isPro={isPro} />;
+      case 'dashboard': return <Dashboard clients={displayClients} messageLog={messageLog} isLicensed={isLicensed} onActivate={handleActivateLicense} />;
       case 'clients': return <ClientList {...props} />;
-      case 'templates': return <TemplateManager templates={templates} setTemplates={setTemplates} isPro={isPro} maxTemplates={maxTemplates} />;
-      case 'pricing': return <Pricing isPro={isPro} />;
-      default: return <Dashboard clients={clients} messageLog={messageLog} isPro={isPro} />;
+      case 'templates': return <TemplateManager templates={displayTemplates} setTemplates={setTemplates} isLicensed={isLicensed} />;
+      default: return <Dashboard clients={displayClients} messageLog={messageLog} isLicensed={isLicensed} onActivate={handleActivateLicense} />;
     }
   };
-  return (<Layout activeView={activeView} setActiveView={setActiveView} isPro={isPro}><div className="page-enter">{renderView()}</div></Layout>);
+  
+  return (<Layout activeView={activeView} setActiveView={setActiveView} isLicensed={isLicensed}><div className="page-enter">{renderView()}</div></Layout>);
 }
