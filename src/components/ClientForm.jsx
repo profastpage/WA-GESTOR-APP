@@ -60,8 +60,8 @@ export default function ClientForm({ onSave, editData, onCancel }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.phone.trim()) {
-      alert("Nombre y teléfono son obligatorios.");
+    if (!form.phone.trim()) {
+      alert("El teléfono es obligatorio.");
       return;
     }
 
@@ -116,7 +116,7 @@ export default function ClientForm({ onSave, editData, onCancel }) {
 
       <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Completo *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Nombre (opcional)</label>
           <input
             type="text"
             value={form.name}
@@ -126,7 +126,7 @@ export default function ClientForm({ onSave, editData, onCancel }) {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono (con código de país) *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono *</label>
           <input
             type="tel"
             value={form.phone}
