@@ -92,7 +92,7 @@ export default function Layout({ children, activeView, setActiveView, isLicensed
       {user && clients.length > 0 && (
         <button onClick={exportToExcel} className="bg-white/10 p-1.5 rounded-lg hover:bg-white/20 transition-colors" title="Exportar Excel">📊</button>
       )}
-      <button onClick={toggleTheme} className="bg-white/10 p-1.5 rounded-lg hover:bg-white/20 transition-colors text-lg" title={isDark ? 'Modo claro' : 'Modo oscuro'}>
+      <button onClick={toggleTheme} className="bg-white/10 p-1.5 rounded-lg hover:bg-white/20 transition-colors" title={isDark ? 'Modo claro' : 'Modo oscuro'}>
         {isDark ? '☀️' : '🌙'}
       </button>
       {isInstallable && (
@@ -117,7 +117,7 @@ export default function Layout({ children, activeView, setActiveView, isLicensed
     ];
 
     return (
-      <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+      <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
         <header className="bg-wa-dark text-white p-4 shadow-lg flex items-center justify-between shrink-0">
           <div><h1 className="text-xl font-bold tracking-tight">WA Manager</h1><p className="text-xs text-wa-light opacity-80">Gestión de Clientes</p></div>
           <HeaderContent />
@@ -126,7 +126,7 @@ export default function Layout({ children, activeView, setActiveView, isLicensed
         {showLogin && <LoginModal onClose={() => setShowLogin(false)} onLogin={onLogin} />}
         <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex justify-around items-center h-16 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">
           {navItems.map(item => (
-            <button key={item.id} data-view={item.id} onClick={() => setActiveView(item.id)} className={`flex flex-col items-center justify-center w-full h-full transition-colors ${activeView === item.id ? 'text-wa-dark dark:text-wa-green' : 'text-gray-400 dark:text-gray-500'}`}>
+            <button key={item.id} data-view={item.id} onClick={() => setActiveView(item.id)} className={`flex flex-col items-center justify-center w-full h-full transition-colors ${activeView === item.id ? 'text-wa-dark dark:text-wa-green' : 'text-gray-400'}`}>
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d={item.icon} /></svg>
               <span className="text-[10px] mt-1 font-medium">{item.label}</span>
             </button>
@@ -144,7 +144,7 @@ export default function Layout({ children, activeView, setActiveView, isLicensed
   ];
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200 relative">
+    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900 transition-colors relative">
       <header className="bg-wa-dark text-white p-4 shadow-lg flex items-center justify-between shrink-0">
         <div><h1 className="text-xl font-bold tracking-tight">WA Manager</h1><p className="text-xs text-wa-light opacity-80">Gestión de Clientes</p></div>
         <HeaderContent />

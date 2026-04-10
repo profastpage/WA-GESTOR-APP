@@ -6,14 +6,13 @@ export function useTheme() {
     return saved === 'dark';
   });
 
-  // Apply dark class to HTML element (not just body)
   useEffect(() => {
-    const html = document.documentElement;
+    const root = document.documentElement;
     if (isDark) {
-      html.classList.add('dark');
+      root.classList.add('dark');
       localStorage.setItem('wa_theme', 'dark');
     } else {
-      html.classList.remove('dark');
+      root.classList.remove('dark');
       localStorage.setItem('wa_theme', 'light');
     }
   }, [isDark]);

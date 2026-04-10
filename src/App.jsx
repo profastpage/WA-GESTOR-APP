@@ -109,8 +109,6 @@ export default function App() {
       onLogout={logout}
       user={user}
       showLoginButton={true}
-      clients={displayClients}
-      isApproved={false}
     >
       <div className="page-enter">{renderView()}</div>
     </Layout>
