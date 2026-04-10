@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Users, MessageSquare, FileText, Clock, Crown, AlertCircle, Sparkles, TrendingUp, ArrowUpRight, Phone, Zap } from "lucide-react";
+import { Users, MessageSquare, FileText, Clock, Crown, AlertCircle, Sparkles, TrendingUp, ArrowUpRight, Phone, Zap, Send, UserPlus, BarChart3 } from "lucide-react";
+import { formatPhoneDisplay } from "@/lib/whatsapp";
 
 export function DashboardView() {
   const { stats, loading } = useStats();
@@ -23,16 +24,16 @@ export function DashboardView() {
     return "Buenas noches";
   };
 
-  const recentClients = clients.slice(0, 3);
+  const recentClients = clients.slice(-3).reverse();
   const recentMessages = [...messages].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5);
   const pendingFollowUps = followUps.filter(f => !f.completed).slice(0, 3);
   const overdueFollowUps = pendingFollowUps.filter(f => new Date(f.dueDate) < new Date());
 
   const statCards = [
-    { label: "Total Clientes", value: stats.totalClients, icon: Users, color: "text-[#128C7E]", bg: "bg-[#128C7E]/10", trend: clients.length > 0 ? "+" : null },
-    { label: "Mensajes Hoy", value: stats.messagesToday, icon: MessageSquare, color: "text-[#25D366]", bg: "bg-[#25D366]/10" },
-    { label: "Plantillas", value: stats.totalTemplates, icon: FileText, color: "text-amber-500", bg: "bg-amber-500/10" },
-    { label: "Seguimientos Pend.", value: stats.pendingFollowUps, icon: Clock, color: overdueFollowUps.length > 0 ? "text-red-500" : "text-violet-500", bg: overdueFollowUps.length > 0 ? "bg-red-500/10" : "bg-violet-500/10" },
+    { label: "Total Clientes", value: stats.totalClients, icon: Users, color: "text-[#128C7E]", bg: "bg-[#128C7E]/10", borderColor: "border-l-[#128C7E]", trend: clients.length > 0 ? "+" : null },
+    { label: "Mensajes Hoy", value: stats.messagesToday, icon: MessageSquare, color: "text-[#25D366]", bg: "bg-[#25D366]/10", borderColor: "border-l-[#25D366]" },
+    { label: "Plantillas", value: stats.totalTemplates, icon: FileText, color: "text-amber-500", bg: "bg-amber-500/10", borderColor: "border-l-amber-500" },
+    { label: "Seguimientos Pend.", value: stats.pendingFollowUps, icon: Clock, color: overdueFollowUps.length > 0 ? "text-red-500" : "text-violet-500", bg: overdueFollowUps.length > 0 ? "bg-red-500/10" : "bg-violet-500/10", borderColor: overdueFollowUps.length > 0 ? "border-l-red-500" : "border-l-violet-500" },
   ];
 
   const freeLimit = 30;
@@ -84,7 +85,7 @@ export function DashboardView() {
 
       {/* Demo mode notice */}
       {!isAuthenticated && (
-        <div className="flex items-center gap-2.5 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3.5">
+        <div className="flex items-center gap-2.5 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3.5 card-hover">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 shrink-0">
             <AlertCircle className="h-4 w-4 text-amber-500" />
           </div>
@@ -92,7 +93,7 @@ export function DashboardView() {
             <p className="text-xs font-medium text-amber-600 dark:text-amber-400">Modo Demo</p>
             <p className="text-[11px] text-muted-foreground">
               Los datos se guardan localmente.{" "}
-              <span className="text-[#25D366] font-medium">Inicia sesión</span> para sincronizar en la nube.
+              <span className="text-[#25D366] font-medium cursor-pointer hover:underline">Inicia sesión</span> para sincronizar en la nube.
             </p>
           </div>
         </div>
@@ -100,7 +101,7 @@ export function DashboardView() {
 
       {/* Pro Banner */}
       {user?.isPro && (
-        <div className="flex items-center gap-3 rounded-xl bg-gradient-to-r from-[#25D366]/10 to-[#128C7E]/10 border border-[#25D366]/20 p-4">
+        <div className="flex items-center gap-3 rounded-xl bg-gradient-to-r from-amber-500/10 via-[#25D366]/10 to-[#128C7E]/10 border border-[#25D366]/20 p-4 card-hover">
           <Crown className="h-6 w-6 text-amber-500 shrink-0" />
           <div>
             <p className="text-sm font-semibold text-[#25D366]">Licencia Pro Activa</p>
@@ -111,8 +112,12 @@ export function DashboardView() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        {statCards.map((stat) => (
-          <Card key={stat.label} className="border-0 shadow-sm bg-card hover:shadow-md transition-shadow">
+        {statCards.map((stat, index) => (
+          <Card
+            key={stat.label}
+            className={`border-0 shadow-sm bg-card card-hover border-l-4 ${stat.borderColor} stagger-item`}
+            style={{ animationDelay: `${index * 0.05}s` }}
+          >
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2.5">
                 <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${stat.bg}`}>
@@ -132,9 +137,45 @@ export function DashboardView() {
         ))}
       </div>
 
+      {/* Quick Actions */}
+      {clients.length > 0 && (
+        <div>
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Acciones Rápidas</h3>
+          <div className="grid grid-cols-3 gap-2.5">
+            <Button
+              variant="outline"
+              className="h-auto py-3 flex-col gap-2 rounded-xl hover:bg-[#25D366]/5 hover:border-[#25D366]/30 transition-all"
+            >
+              <div className="h-8 w-8 rounded-lg bg-[#25D366]/10 flex items-center justify-center">
+                <UserPlus className="h-4 w-4 text-[#25D366]" />
+              </div>
+              <span className="text-[10px] font-medium">Nuevo Cliente</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="h-auto py-3 flex-col gap-2 rounded-xl hover:bg-[#25D366]/5 hover:border-[#25D366]/30 transition-all"
+            >
+              <div className="h-8 w-8 rounded-lg bg-[#128C7E]/10 flex items-center justify-center">
+                <Send className="h-4 w-4 text-[#128C7E]" />
+              </div>
+              <span className="text-[10px] font-medium">Enviar Mensaje</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="h-auto py-3 flex-col gap-2 rounded-xl hover:bg-amber-500/5 hover:border-amber-500/30 transition-all"
+            >
+              <div className="h-8 w-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                <BarChart3 className="h-4 w-4 text-amber-500" />
+              </div>
+              <span className="text-[10px] font-medium">Ver Reportes</span>
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Usage Progress (Free plan) */}
       {!user?.isPro && clients.length > 0 && (
-        <Card className={`border-0 shadow-sm ${isNearLimit ? "border-l-4 border-l-amber-500" : ""}`}>
+        <Card className={`border-0 shadow-sm card-hover ${isNearLimit ? "border-l-4 border-l-amber-500" : ""}`}>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -147,8 +188,9 @@ export function DashboardView() {
             </div>
             <Progress value={clientUsage} className={`h-2 ${isNearLimit ? "[&>div]:bg-amber-500" : "[&>div]:bg-[#25D366]"}`} />
             {isNearLimit && (
-              <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1.5">
-                ⚠️ Estás cerca del límite. Actualiza a Pro para clientes ilimitados.
+              <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1.5 flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                Estás cerca del límite. Actualiza a Pro para clientes ilimitados.
               </p>
             )}
           </CardContent>
@@ -157,10 +199,10 @@ export function DashboardView() {
 
       {/* Overdue Follow-ups Alert */}
       {overdueFollowUps.length > 0 && (
-        <Card className="border-0 shadow-sm border-l-4 border-l-red-500">
+        <Card className="border-0 shadow-sm border-l-4 border-l-red-500 card-hover">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/10">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/10 animate-pulse-soft">
                 <AlertCircle className="h-4 w-4 text-red-500" />
               </div>
               <div>
@@ -170,11 +212,45 @@ export function DashboardView() {
               </div>
             </div>
             <div className="space-y-2">
-              {overdueFollowUps.slice(0, 2).map((fu) => (
-                <div key={fu.id} className="flex items-center gap-2 text-xs text-muted-foreground">
+              {overdueFollowUps.slice(0, 3).map((fu) => (
+                <div key={fu.id} className="flex items-center gap-2 text-xs bg-red-50 dark:bg-red-500/5 rounded-lg p-2">
                   <Clock className="h-3 w-3 text-red-400 shrink-0" />
-                  <span className="font-medium text-foreground truncate">{fu.title}</span>
-                  <span className="text-red-400 shrink-0">— {getClientName(fu.clientId)}</span>
+                  <span className="font-medium text-foreground truncate flex-1">{fu.title}</span>
+                  <span className="text-red-400 shrink-0 text-[10px]">{getClientName(fu.clientId)}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Recent Clients */}
+      {recentClients.length > 0 && (
+        <Card className="border-0 shadow-sm card-hover">
+          <CardContent className="p-4 sm:p-5">
+            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+              <Users className="h-4 w-4 text-[#128C7E]" />
+              Clientes Recientes
+            </h3>
+            <div className="space-y-2">
+              {recentClients.map((client) => (
+                <div key={client.id} className="flex items-center gap-3 py-1.5">
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center shrink-0 text-white font-bold text-[11px]">
+                    {(client.name || client.phone || "?").charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium truncate">{client.name || "Sin nombre"}</p>
+                    <p className="text-[10px] text-muted-foreground">{formatPhoneDisplay(client.phone) || "—"}</p>
+                  </div>
+                  {client.tags.length > 0 && (
+                    <Badge className={`text-[9px] px-1.5 py-0 h-4 font-bold ${
+                      client.tags.includes("VIP") ? "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300" :
+                      client.tags.includes("Nuevo") ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" :
+                      "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                    }`}>
+                      {client.tags[0]}
+                    </Badge>
+                  )}
                 </div>
               ))}
             </div>
@@ -184,7 +260,7 @@ export function DashboardView() {
 
       {/* Recent Messages Activity */}
       {recentMessages.length > 0 && (
-        <Card className="border-0 shadow-sm">
+        <Card className="border-0 shadow-sm card-hover">
           <CardContent className="p-4 sm:p-5">
             <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-[#25D366]" />
@@ -201,7 +277,9 @@ export function DashboardView() {
                       <span className="text-xs font-medium truncate">{getClientName(msg.clientId)}</span>
                       <span className="text-[10px] text-muted-foreground shrink-0 ml-2">{formatDate(msg.createdAt)}</span>
                     </div>
-                    <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{msg.content}</p>
+                    <div className="wa-bubble-sent rounded-lg px-3 py-2 mt-1">
+                      <p className="text-[11px] text-foreground/90 line-clamp-2 whitespace-pre-wrap">{msg.content}</p>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -212,14 +290,14 @@ export function DashboardView() {
 
       {/* Tag Distribution */}
       {stats.tagDistribution.length > 0 && (
-        <Card className="border-0 shadow-sm">
+        <Card className="border-0 shadow-sm card-hover">
           <CardContent className="p-4 sm:p-5">
             <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-[#128C7E]" />
               Distribución de Etiquetas
             </h3>
             <div className="space-y-3">
-              {stats.tagDistribution.map((item) => {
+              {stats.tagDistribution.map((item, index) => {
                 const maxCount = stats.tagDistribution[0]?.count || 1;
                 const pct = Math.round((item.count / maxCount) * 100);
                 const tagColors: Record<string, string> = {
@@ -228,7 +306,7 @@ export function DashboardView() {
                   VIP: "bg-purple-500",
                 };
                 return (
-                  <div key={item.tag} className="flex items-center gap-3">
+                  <div key={item.tag} className="flex items-center gap-3 stagger-item" style={{ animationDelay: `${index * 0.05}s` }}>
                     <div className="w-20 sm:w-24 text-xs font-medium truncate">{item.tag}</div>
                     <div className="flex-1 h-5 rounded-full bg-muted overflow-hidden">
                       <div
@@ -245,10 +323,12 @@ export function DashboardView() {
         </Card>
       )}
 
-      {/* Quick Tips / CTA */}
+      {/* Quick Tips / CTA - Empty State */}
       {!user?.isPro && stats.totalClients === 0 && (
-        <Card className="border-0 shadow-sm bg-gradient-to-br from-[#075E54] to-[#128C7E] text-white">
-          <CardContent className="p-5">
+        <Card className="border-0 shadow-sm bg-gradient-to-br from-[#075E54] to-[#128C7E] text-white overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+          <CardContent className="p-5 relative">
             <div className="flex items-center gap-2 mb-2">
               <Crown className="h-5 w-5 text-amber-300" />
               <h3 className="text-sm font-bold">Comienza a gestionar tus clientes</h3>
@@ -266,6 +346,9 @@ export function DashboardView() {
               <Badge className="bg-white/20 text-white border-0 text-[10px]">
                 <FileText className="mr-1 h-3 w-3" /> Plantillas
               </Badge>
+              <Badge className="bg-white/20 text-white border-0 text-[10px]">
+                <Send className="mr-1 h-3 w-3" /> Envío masivo
+              </Badge>
             </div>
           </CardContent>
         </Card>
@@ -273,8 +356,9 @@ export function DashboardView() {
 
       {/* Upgrade CTA */}
       {!user?.isPro && stats.totalClients > 5 && (
-        <Card className="border-0 shadow-sm bg-gradient-to-br from-[#075E54] to-[#128C7E] text-white">
-          <CardContent className="p-4 sm:p-5">
+        <Card className="border-0 shadow-sm bg-gradient-to-br from-[#075E54] to-[#128C7E] text-white overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <CardContent className="p-4 sm:p-5 relative">
             <div className="flex items-center gap-2 mb-2">
               <Crown className="h-5 w-5 text-amber-300" />
               <h3 className="text-sm font-bold">Desbloquea el Plan Pro</h3>
@@ -282,7 +366,7 @@ export function DashboardView() {
             <p className="text-xs text-white/80 mb-3">
               Clientes ilimitados, plantillas ilimitadas, seguimientos avanzados y más.
             </p>
-            <Badge className="bg-white/20 text-white border-0 hover:bg-white/30 cursor-pointer">
+            <Badge className="bg-white/20 text-white border-0 hover:bg-white/30 cursor-pointer transition-colors">
               S/99 pago único · Activa con código
             </Badge>
           </CardContent>

@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useClients, useTemplates, useMessages } from "@/hooks/use-data";
+import { useClients, useTemplates, useMessages, useFollowUps } from "@/hooks/use-data";
 import { ClientFormSheet } from "./client-form-sheet";
 import { SendMessageDialog } from "./send-message-dialog";
+import { ClientDetailPanel } from "./client-detail-panel";
+import { BatchSendDialog } from "./batch-send-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,6 +26,7 @@ import {
   StickyNote,
   Users,
   Filter,
+  Send,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -38,13 +41,16 @@ const TAG_COLORS: Record<string, string> = {
 export function ClientsView() {
   const { clients, loading, addClient, updateClient, deleteClient } = useClients();
   const { templates } = useTemplates();
-  const { logMessage } = useMessages();
+  const { messages, logMessage } = useMessages();
+  const { followUps } = useFollowUps();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTag, setFilterTag] = useState("Todos");
   const [formOpen, setFormOpen] = useState(false);
   const [editClient, setEditClient] = useState<Client | null>(null);
   const [sendClient, setSendClient] = useState<Client | null>(null);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [batchOpen, setBatchOpen] = useState(false);
 
   const filtered = useMemo(() => {
     return clients.filter((c) => {
@@ -110,13 +116,25 @@ export function ClientsView() {
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">{filtered.length} de {clients.length} clientes</p>
         </div>
-        <Button
-          size="sm"
-          className="bg-[#25D366] text-white hover:bg-[#128C7E] shadow-sm"
-          onClick={() => { setEditClient(null); setFormOpen(true); }}
-        >
-          <Plus className="mr-1.5 h-4 w-4" /> Nuevo
-        </Button>
+        <div className="flex gap-2">
+          {clients.length > 0 && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-[#25D366]/30 text-[#128C7E] hover:bg-[#25D366]/10 hover:text-[#075E54]"
+              onClick={() => setBatchOpen(true)}
+            >
+              <Send className="mr-1.5 h-4 w-4" /> Enviar Masivo
+            </Button>
+          )}
+          <Button
+            size="sm"
+            className="bg-[#25D366] text-white hover:bg-[#128C7E] shadow-sm"
+            onClick={() => { setEditClient(null); setFormOpen(true); }}
+          >
+            <Plus className="mr-1.5 h-4 w-4" /> Nuevo
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
@@ -176,15 +194,23 @@ export function ClientsView() {
               <Card key={client.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
                 <CardContent className="p-3.5">
                   <div className="flex items-start gap-3">
-                    {/* Avatar */}
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center shrink-0 text-white font-bold text-sm">
+                    {/* Avatar — clickable to open detail panel */}
+                    <button
+                      className="h-10 w-10 rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center shrink-0 text-white font-bold text-sm cursor-pointer hover:ring-2 hover:ring-[#25D366]/30 transition-all"
+                      onClick={() => setSelectedClient(client)}
+                      aria-label={`Ver detalles de ${client.name || "cliente"}`}
+                    >
                       {(client.name || client.phone || "?").charAt(0).toUpperCase()}
-                    </div>
+                    </button>
 
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
+                    {/* Info — name area clickable */}
+                    <button
+                      className="flex-1 min-w-0 text-left"
+                      onClick={() => setSelectedClient(client)}
+                      aria-label={`Ver detalles de ${client.name || "cliente"}`}
+                    >
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <h3 className="font-semibold text-sm truncate">{client.name || "Sin nombre"}</h3>
+                        <h3 className="font-semibold text-sm truncate hover:text-[#128C7E] transition-colors">{client.name || "Sin nombre"}</h3>
                         {client.tags.map((tag) => (
                           <Badge key={tag} className={`text-[9px] px-1.5 py-0 h-4 font-bold ${TAG_COLORS[tag] || "bg-muted"}`}>
                             {tag}
@@ -223,7 +249,7 @@ export function ClientsView() {
                           {client.totalMessages} mensaje{client.totalMessages !== 1 ? "s" : ""} enviado{client.totalMessages !== 1 ? "s" : ""}
                         </p>
                       )}
-                    </div>
+                    </button>
 
                     {/* Actions */}
                     <div className="flex flex-col gap-1.5 shrink-0">
@@ -279,6 +305,30 @@ export function ClientsView() {
         templates={templates}
         onSend={handleSendMessage}
       />
+
+      {/* Batch Send Dialog */}
+      <BatchSendDialog
+        open={batchOpen}
+        onOpenChange={setBatchOpen}
+        clients={clients}
+        templates={templates}
+        onSend={handleSendMessage}
+      />
+
+      {/* Client Detail Panel */}
+      {selectedClient && (
+        <ClientDetailPanel
+          open={!!selectedClient}
+          onOpenChange={(open) => { if (!open) setSelectedClient(null); }}
+          client={selectedClient}
+          messages={messages.filter(m => m.clientId === selectedClient.id)}
+          followUps={followUps.filter(f => f.clientId === selectedClient.id)}
+          onSendMessage={() => {
+            setSelectedClient(null);
+            setSendClient(selectedClient);
+          }}
+        />
+      )}
     </div>
   );
 }

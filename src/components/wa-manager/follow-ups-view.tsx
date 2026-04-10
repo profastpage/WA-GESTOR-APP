@@ -8,7 +8,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { formatPhoneDisplay } from "@/lib/whatsapp";
 import type { Client, FollowUp } from "@/hooks/use-data";
 import {
   Plus,

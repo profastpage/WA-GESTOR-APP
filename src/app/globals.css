@@ -125,27 +125,47 @@
   }
 }
 
-/* Custom scrollbar */
+/* ====================== */
+/* Custom Scrollbar       */
+/* ====================== */
 ::-webkit-scrollbar {
-  width: 4px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.7 0 0);
-  border-radius: 4px;
+  background: oklch(0.75 0 0 / 40%);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.6 0 0 / 60%);
 }
 .dark ::-webkit-scrollbar-thumb {
-  background: oklch(0.4 0 0);
+  background: oklch(0.4 0 0 / 40%);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.5 0 0 / 60%);
 }
 
-/* Page transitions */
-.page-enter {
-  animation: fadeIn 0.2s ease-in-out;
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.75 0 0 / 40%) transparent;
 }
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
+.dark * {
+  scrollbar-color: oklch(0.4 0 0 / 40%) transparent;
+}
+
+/* ====================== */
+/* Page Transitions       */
+/* ====================== */
+.page-enter {
+  animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -154,27 +174,210 @@
   to { transform: translateY(0); opacity: 1; }
 }
 .animate-slide-up {
-  animation: slideUp 0.3s ease-out;
+  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes scaleIn {
-  0% { transform: scale(0.95); opacity: 0; }
+  0% { transform: scale(0.92); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
 .animate-scale-in {
-  animation: scaleIn 0.2s ease-out;
+  animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* WhatsApp chat bubble style */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.animate-slide-in-right {
+  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 0%, oklch(0.95 0 0 / 50%) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ====================== */
+/* WhatsApp Chat Bubble   */
+/* ====================== */
 .wa-bubble-sent {
   background: #DCF8C6;
   border-radius: 8px 0 8px 8px;
+  position: relative;
+}
+.wa-bubble-sent::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 0 8px 8px;
+  border-color: transparent transparent #DCF8C6 transparent;
 }
 .dark .wa-bubble-sent {
   background: #054640;
 }
+.dark .wa-bubble-sent::after {
+  border-color: transparent transparent #054640 transparent;
+}
 
-/* Smooth transitions */
+/* ====================== */
+/* Card Hover Effects     */
+/* ====================== */
+.card-hover {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -2px oklch(0 0 0 / 8%), 0 2px 4px -2px oklch(0 0 0 / 5%);
+}
+.dark .card-hover:hover {
+  box-shadow: 0 4px 12px -2px oklch(0 0 0 / 30%), 0 2px 4px -2px oklch(0 0 0 / 20%);
+}
+
+/* ====================== */
+/* Glassmorphism Header   */
+/* ====================== */
+.glass-header {
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+}
+
+/* ====================== */
+/* Safe Area Bottom       */
+/* ====================== */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ====================== */
+/* Smooth View Transition */
+/* ====================== */
 .transition-view {
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* ====================== */
+/* Staggered Animation    */
+/* ====================== */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+
+.stagger-item {
+  opacity: 0;
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ====================== */
+/* Badge Notification Dot */
+/* ====================== */
+.notification-dot {
+  position: relative;
+}
+.notification-dot::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
+  border-radius: 50%;
+  border: 2px solid oklch(1 0 0);
+}
+.dark .notification-dot::after {
+  border-color: oklch(0.18 0.01 160);
+}
+
+/* ====================== */
+/* Button Ripple Effect   */
+/* ====================== */
+.btn-wa {
+  position: relative;
+  overflow: hidden;
+}
+.btn-wa::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.btn-wa:hover::after {
+  opacity: 1;
+}
+
+/* ====================== */
+/* Gradient Text Utility  */
+/* ====================== */
+.text-gradient-wa {
+  background: linear-gradient(135deg, #25D366, #128C7E);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ====================== */
+/* Focus Ring Enhancement */
+/* ====================== */
+.focus-ring-wa:focus-visible {
+  outline: 2px solid #25D366;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* ====================== */
+/* Floating Action Style  */
+/* ====================== */
+.float-action {
+  box-shadow: 0 4px 20px -4px rgba(37, 211, 102, 0.4), 0 2px 8px -2px rgba(37, 211, 102, 0.2);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.float-action:hover {
+  box-shadow: 0 6px 24px -4px rgba(37, 211, 102, 0.5), 0 4px 12px -2px rgba(37, 211, 102, 0.3);
+  transform: translateY(-1px);
+}
+
+/* ====================== */
+/* Input Focus Animation  */
+/* ====================== */
+input:focus, textarea:focus, select:focus {
+  transition: box-shadow 0.2s ease;
+}
+
+/* ====================== */
+/* Selection Color        */
+/* ====================== */
+::selection {
+  background: oklch(0.7 0.17 160 / 30%);
+}
+.dark ::selection {
+  background: oklch(0.4 0.17 160 / 40%);
 }

@@ -257,7 +257,7 @@ export function SettingsView() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2.5">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10">
-                <Lock className="h-4.5 w-4.5 text-amber-500" />
+                <Lock className="h-[18px] w-[18px] text-amber-500" />
               </div>
               <div>
                 <h3 className="text-sm font-semibold">Cambiar Contraseña</h3>
@@ -337,7 +337,7 @@ export function SettingsView() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-500/10">
-                <Palette className="h-4.5 w-4.5 text-purple-500" />
+                <Palette className="h-[18px] w-[18px] text-purple-500" />
               </div>
               <div>
                 <h3 className="text-sm font-semibold">Tema de la App</h3>
@@ -380,7 +380,7 @@ export function SettingsView() {
         <CardContent className="p-5">
           <div className="flex items-center gap-2.5 mb-4">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10">
-              <Bell className="h-4.5 w-4.5 text-blue-500" />
+              <Bell className="h-[18px] w-[18px] text-blue-500" />
             </div>
             <div>
               <h3 className="text-sm font-semibold">Notificaciones</h3>
@@ -413,7 +413,7 @@ export function SettingsView() {
         <CardContent className="p-5">
           <div className="flex items-start gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#25D366]/15 shrink-0 mt-0.5">
-              <MessageCircle className="h-4.5 w-4.5 text-[#25D366]" />
+              <MessageCircle className="h-[18px] w-[18px] text-[#25D366]" />
             </div>
             <div>
               <h3 className="text-sm font-semibold text-[#128C7E] dark:text-[#25D366]">
@@ -441,7 +441,7 @@ export function SettingsView() {
         <CardContent className="p-5">
           <div className="flex items-center gap-2.5 mb-4">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-500/10">
-              <Info className="h-4.5 w-4.5 text-sky-500" />
+              <Info className="h-[18px] w-[18px] text-sky-500" />
             </div>
             <div>
               <h3 className="text-sm font-semibold">Acerca de</h3>
@@ -480,7 +480,7 @@ export function SettingsView() {
         <CardContent className="p-5">
           <div className="flex items-center gap-2.5 mb-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-500/10">
-              <Trash2 className="h-4.5 w-4.5 text-red-500" />
+              <Trash2 className="h-[18px] w-[18px] text-red-500" />
             </div>
             <div>
               <h3 className="text-sm font-semibold text-red-600 dark:text-red-400">Zona de Peligro</h3>
