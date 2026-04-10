@@ -13,7 +13,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
 import { WhatsAppComplianceNotice } from "./whatsapp-compliance-notice";
 import { generateWhatsAppLink, replaceTemplateVars, TEMPLATE_VARIABLES } from "@/lib/whatsapp";
 import type { Client, Template } from "@/hooks/use-data";

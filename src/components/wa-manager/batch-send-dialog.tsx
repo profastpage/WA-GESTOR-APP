@@ -31,7 +31,6 @@ import {
   FileText,
   Edit3,
   Sparkles,
-  Shield,
   Loader2,
   MessageSquare,
   X,

@@ -354,15 +354,15 @@ export function ClientDetailPanel({
                       key={msg.id}
                       className="wa-bubble-sent p-2.5 rounded-xl relative group"
                     >
-                      <p className="text-xs text-white/90 whitespace-pre-wrap leading-relaxed pr-8">
+                      <p className="text-xs text-foreground/90 whitespace-pre-wrap leading-relaxed pr-8">
                         {msg.content}
                       </p>
                       <div className="flex items-center justify-end gap-1 mt-1">
-                        <span className="text-[9px] text-white/50">
+                        <span className="text-[9px] text-foreground/50">
                           {formatRelativeTime(msg.createdAt)}
                         </span>
                         {msg.type === "outgoing" && (
-                          <CheckCircle2 className="h-3 w-3 text-white/50" />
+                          <CheckCircle2 className="h-3 w-3 text-foreground/50" />
                         )}
                       </div>
                     </div>
