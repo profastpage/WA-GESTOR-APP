@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useCRM } from '../hooks/useCRM';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 import Layout from './Layout';
 import Dashboard from './Dashboard';
 import ClientList from './ClientList';
@@ -9,90 +9,75 @@ import { exportService } from '../services/firestore';
 
 export default function ClientPanel() {
   const { user, logout, isSuperAdmin, isApproved } = useAuth();
-  const navigate = typeof window !== 'undefined' ? window.location : null;
   const [activeView, setActiveView] = useState('dashboard');
   
-  // CRM data from Firebase
-  const crm = useCRM(user?.uid || '');
-
-  // Initialize default data for new users
-  useEffect(() => {
-    if (user && !isSuperAdmin && crm.loading === false && crm.clients.length === 0 && crm.templates.length === 0) {
-      crm.initDefaultData().catch(() => {});
-    }
-  }, [user, isSuperAdmin, crm.loading, crm.clients.length, crm.templates.length]);
+  // Fallback to localStorage when Firestore fails
+  const [clients, setClients] = useLocalStorage('wa_clients', []);
+  const [templates, setTemplates] = useLocalStorage('wa_templates', []);
+  const [messageLog, setMessageLog] = useLocalStorage('wa_log', []);
 
   // Redirect admin to admin panel
   useEffect(() => {
-    if (isSuperAdmin && navigate) {
+    if (isSuperAdmin) {
       window.location.href = '/admin';
     }
-  }, [isSuperAdmin, navigate]);
-
-  // Redirect to landing if not logged in
-  useEffect(() => {
-    if (!user && navigate) {
+    if (!user) {
       window.location.href = '/';
     }
-  }, [user, navigate]);
+  }, [user, isSuperAdmin]);
 
   if (!user || isSuperAdmin) return null;
-  if (crm.loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-wa-dark"></div>
-      </div>
-    );
-  }
 
-  // Handler functions
-  const handleSaveClient = async (clientData) => {
+  // Handler functions (localStorage based for now)
+  const handleSaveClient = (clientData) => {
     if (clientData.id) {
-      await crm.updateClient(clientData.id, clientData);
+      setClients(prev => prev.map(c => c.id === clientData.id ? { ...c, ...clientData } : c));
     } else {
-      await crm.addClient(clientData);
+      setClients(prev => [...prev, { ...clientData, id: Date.now().toString() }]);
     }
   };
 
-  const handleDeleteClient = async (clientId) => {
+  const handleDeleteClient = (clientId) => {
     if (confirm('¿Eliminar este cliente?')) {
-      await crm.deleteClient(clientId);
+      setClients(prev => prev.filter(c => c.id !== clientId));
     }
   };
 
-  const handleSendWA = async (clientId, templateId, templateText, clientName) => {
-    const message = (templateText || '').replace('{nombre}', clientName.split(' ')[0]);
-    await crm.sendMessage(clientId, templateId, message);
-  };
-
-  const handleSaveTemplate = async (templateData) => {
+  const handleSaveTemplate = (templateData) => {
     if (templateData.id) {
-      await crm.updateTemplate(templateData.id, templateData);
+      setTemplates(prev => prev.map(t => t.id === templateData.id ? { ...t, ...templateData } : t));
     } else {
-      await crm.addTemplate(templateData);
+      setTemplates(prev => [...prev, { ...templateData, id: Date.now().toString() }]);
     }
   };
 
-  const handleDeleteTemplate = async (templateId) => {
+  const handleDeleteTemplate = (templateId) => {
     if (confirm('¿Eliminar esta plantilla?')) {
-      await crm.deleteTemplate(templateId);
+      setTemplates(prev => prev.filter(t => t.id !== templateId));
     }
+  };
+
+  const handleSendWA = (clientId, templateId, templateText, clientName) => {
+    const message = (templateText || '').replace('{nombre}', clientName.split(' ')[0]);
+    window.open(`https://wa.me/51933667414?text=${encodeURIComponent(message)}`, '_blank');
+    setMessageLog(prev => [...prev, { clientId, timestamp: Date.now() }]);
   };
 
   const handleExportCSV = () => {
-    crm.exportToCSV();
+    const csv = exportService.toCSV(clients);
+    exportService.download(csv, `clientes_${new Date().toISOString().split('T')[0]}.csv`);
   };
 
   const renderView = () => {
     switch (activeView) {
       case 'dashboard':
-        return <Dashboard clients={crm.clients} messageLog={[]} isLicensed={true} user={user} stats={crm.stats} loading={crm.loading} />;
+        return <Dashboard clients={clients} messageLog={messageLog} isLicensed={true} user={user} isApproved={isApproved} />;
       case 'clients':
-        return <ClientList clients={crm.clients} setClients={null} templates={crm.templates} logMessage={(id) => crm.sendMessage(id, null, '')} isLicensed={true} user={user} isApproved={isApproved} onSaveClient={handleSaveClient} onDeleteClient={handleDeleteClient} />;
+        return <ClientList clients={clients} setClients={setClients} templates={templates} logMessage={() => {}} isLicensed={true} user={user} isApproved={isApproved} onSaveClient={handleSaveClient} onDeleteClient={handleDeleteClient} />;
       case 'templates':
-        return <TemplateManager templates={crm.templates} setTemplates={null} isLicensed={true} user={user} onSave={handleSaveTemplate} onDelete={handleDeleteTemplate} />;
+        return <TemplateManager templates={templates} setTemplates={setTemplates} isLicensed={true} user={user} isApproved={isApproved} onSave={handleSaveTemplate} onDelete={handleDeleteTemplate} />;
       default:
-        return <Dashboard clients={crm.clients} messageLog={[]} isLicensed={true} user={user} stats={crm.stats} loading={crm.loading} />;
+        return <Dashboard clients={clients} messageLog={messageLog} isLicensed={true} user={user} isApproved={isApproved} />;
     }
   };
 
@@ -104,6 +89,8 @@ export default function ClientPanel() {
       onLogout={logout}
       user={user}
       showLoginButton={false}
+      clients={clients}
+      isApproved={isApproved}
     >
       <div className="page-enter">{renderView()}</div>
     </Layout>
