@@ -57,6 +57,24 @@ const CAT_COLORS: Record<string, string> = {
   cierre: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
 };
 
+const CAT_BORDERS: Record<string, string> = {
+  general: "border-l-slate-400",
+  saludo: "border-l-green-500",
+  ventas: "border-l-amber-500",
+  seguimiento: "border-l-blue-500",
+  recordatorio: "border-l-red-500",
+  cierre: "border-l-purple-500",
+};
+
+const CAT_DOTS: Record<string, string> = {
+  general: "bg-slate-400",
+  saludo: "bg-green-500",
+  ventas: "bg-amber-500",
+  seguimiento: "bg-blue-500",
+  recordatorio: "bg-red-500",
+  cierre: "bg-purple-500",
+};
+
 export function TemplatesView() {
   const { templates, loading, addTemplate, updateTemplate, deleteTemplate } = useTemplates();
   const { toast } = useToast();
@@ -119,16 +137,20 @@ export function TemplatesView() {
 
   return (
     <div className="space-y-4 page-enter">
+      {/* Section Header with Gradient Icon */}
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
-            <FileText className="h-5 w-5 text-[#25D366]" /> Plantillas
-          </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">{filtered.length} de {templates.length} plantillas</p>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] shadow-sm">
+            <FileText className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold tracking-tight">Plantillas</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">{filtered.length} de {templates.length} plantillas</p>
+          </div>
         </div>
         <Button
           size="sm"
-          className="bg-[#25D366] text-white hover:bg-[#128C7E] shadow-sm"
+          className="bg-[#25D366] text-white hover:bg-[#128C7E] shadow-sm btn-wa"
           onClick={() => { setEditTmpl(null); setFormOpen(true); }}
         >
           <Plus className="mr-1.5 h-4 w-4" /> Nueva
@@ -146,88 +168,119 @@ export function TemplatesView() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+        {/* Category Filter Pills with Colored Dots */}
         <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
           <button
             onClick={() => setFilterCat("all")}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all press-effect flex items-center gap-1.5 ${
               filterCat === "all"
                 ? "bg-[#128C7E] text-white shadow-sm"
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}
           >
+            <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
             Todas
           </button>
           {CATEGORIES.map((cat) => (
             <button
               key={cat.value}
               onClick={() => setFilterCat(cat.value)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all press-effect flex items-center gap-1.5 ${
                 filterCat === cat.value
                   ? "bg-[#128C7E] text-white shadow-sm"
                   : "bg-muted text-muted-foreground hover:bg-muted/80"
               }`}
             >
-              {cat.emoji} {cat.label}
+              <span className={`w-1.5 h-1.5 rounded-full ${filterCat === cat.value ? "bg-white/70" : CAT_DOTS[cat.value] || "bg-slate-400"}`} />
+              {cat.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Tip */}
-      <div className="flex items-start gap-2 rounded-lg border border-[#25D366]/20 bg-[#25D366]/5 p-3">
-        <Sparkles className="h-4 w-4 shrink-0 text-[#25D366] mt-0.5" />
-        <p className="text-xs text-muted-foreground">
-          Usa variables como{" "}
-          <code className="font-mono bg-muted px-1 rounded text-[10px]">{"{nombre}"}</code>,{" "}
-          <code className="font-mono bg-muted px-1 rounded text-[10px]">{"{empresa}"}</code>,{" "}
-          <code className="font-mono bg-muted px-1 rounded text-[10px]">{"{fecha}"}</code>{" "}
-          para personalizar cada mensaje.
-        </p>
+      {/* Enhanced Tip Box */}
+      <div className="flex items-start gap-3 rounded-xl border border-[#25D366]/25 bg-gradient-to-r from-[#25D366]/5 via-[#128C7E]/5 to-[#25D366]/5 p-3.5 shadow-sm">
+        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#25D366]/10 shrink-0">
+          <Sparkles className="h-4 w-4 text-[#25D366]" />
+        </div>
+        <div>
+          <p className="text-xs font-semibold text-foreground mb-1">Tip: Personaliza tus mensajes</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Usa variables como{" "}
+            <code className="font-mono bg-muted px-1.5 py-0.5 rounded text-[10px] border border-border">{"{nombre}"}</code>,{" "}
+            <code className="font-mono bg-muted px-1.5 py-0.5 rounded text-[10px] border border-border">{"{empresa}"}</code>,{" "}
+            <code className="font-mono bg-muted px-1.5 py-0.5 rounded text-[10px] border border-border">{"{fecha}"}</code>{" "}
+            para personalizar cada mensaje.
+          </p>
+        </div>
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-12">
-          <FileText className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-          <p className="text-sm font-medium text-muted-foreground">{
-            searchTerm || filterCat !== "all" ? "No se encontraron resultados" : "Sin plantillas aún"
-          }</p>
+        /* Enhanced Empty State */
+        <div className="text-center py-16">
+          <div className="w-16 h-16 rounded-2xl bg-[#25D366]/10 flex items-center justify-center mx-auto mb-4">
+            <FileText className="h-8 w-8 text-[#25D366]/50" />
+          </div>
+          <p className="text-sm font-semibold text-muted-foreground">
+            {searchTerm || filterCat !== "all" ? "No se encontraron resultados" : "Sin plantillas aún"}
+          </p>
+          <p className="text-xs text-muted-foreground/60 mt-1">
+            {searchTerm || filterCat !== "all" ? "Intenta con otros términos de búsqueda" : "Crea tu primera plantilla para empezar"}
+          </p>
           {!searchTerm && filterCat === "all" && (
-            <Button variant="link" className="text-[#25D366] mt-2" onClick={() => { setEditTmpl(null); setFormOpen(true); }}>
-              <Plus className="mr-1 h-3.5 w-3.5" /> Crear primera plantilla
+            <Button
+              variant="outline"
+              className="mt-4 border-[#25D366] text-[#25D366] hover:bg-[#25D366] hover:text-white text-xs press-effect"
+              onClick={() => { setEditTmpl(null); setFormOpen(true); }}
+            >
+              <Plus className="mr-1.5 h-3.5 w-3.5" /> Crear primera plantilla
             </Button>
           )}
         </div>
       ) : (
         <ScrollArea className="max-h-[calc(100vh-380px)]">
           <div className="space-y-2.5">
-            {filtered.map((tmpl) => {
+            {filtered.map((tmpl, idx) => {
               const cat = CATEGORIES.find(c => c.value === tmpl.category);
               return (
-                <Card key={tmpl.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+                <Card
+                  key={tmpl.id}
+                  className={`border-0 shadow-sm card-interactive stagger-item border-l-4 ${CAT_BORDERS[tmpl.category] || CAT_BORDERS.general}`}
+                  style={{ animationDelay: `${Math.min(idx * 0.04, 0.3)}s` }}
+                >
                   <CardContent className="p-3.5">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-semibold text-sm">{tmpl.name}</h3>
-                          <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-semibold ${CAT_COLORS[tmpl.category] || CAT_COLORS.general}`}>
-                            {cat?.emoji} {tmpl.category}
-                          </span>
+                          <Badge
+                            variant="outline"
+                            className={`text-[9px] px-1.5 py-0 h-4 font-semibold ${CAT_COLORS[tmpl.category] || CAT_COLORS.general}`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full ${CAT_DOTS[tmpl.category] || CAT_DOTS.general} mr-1`} />
+                            {tmpl.category}
+                          </Badge>
                         </div>
                         <p className="text-xs text-muted-foreground mt-1.5 whitespace-pre-wrap line-clamp-3 leading-relaxed">
                           {tmpl.content}
                         </p>
-                        {tmpl.usageCount > 0 && (
-                          <p className="text-[10px] text-muted-foreground/60 mt-1.5">
-                            Usada {tmpl.usageCount} vez{tmpl.usageCount !== 1 ? "es" : ""}
-                          </p>
-                        )}
+                        <div className="flex items-center gap-3 mt-1.5">
+                          {tmpl.usageCount > 0 && (
+                            <p className="text-[10px] text-muted-foreground/60">
+                              Usada {tmpl.usageCount} vez{tmpl.usageCount !== 1 ? "es" : ""}
+                            </p>
+                          )}
+                          <span className="text-[10px] text-muted-foreground/40">
+                            {tmpl.content.length} caracteres
+                          </span>
+                        </div>
                       </div>
 
                       <div className="flex flex-col gap-1.5 shrink-0">
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-8 w-8 hover:bg-muted"
+                          className={`h-8 w-8 hover:bg-[#25D366]/10 ${copiedId === tmpl.id ? "text-[#25D366]" : ""}`}
                           onClick={() => handleCopy(tmpl.content, tmpl.id)}
                           title="Copiar"
                         >
@@ -339,7 +392,7 @@ function TemplateFormSheet({
                   key={cat.value}
                   type="button"
                   onClick={() => setCategory(cat.value)}
-                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all press-effect flex items-center gap-1 ${
                     category === cat.value
                       ? "bg-[#128C7E] text-white shadow-sm"
                       : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -369,7 +422,10 @@ function TemplateFormSheet({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="tmpl-content">Contenido *</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="tmpl-content">Contenido *</Label>
+              <span className="text-[10px] text-muted-foreground">{content.length} caracteres</span>
+            </div>
             <Textarea
               id="tmpl-content"
               placeholder={"Hola {nombre}, te contactamos de {empresa}...\n\n¿En qué podemos ayudarte?"}
@@ -385,7 +441,7 @@ function TemplateFormSheet({
             <Button type="button" variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" className="flex-1 bg-[#25D366] text-white hover:bg-[#128C7E]" disabled={saving}>
+            <Button type="submit" className="flex-1 bg-[#25D366] text-white hover:bg-[#128C7E] btn-wa" disabled={saving}>
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isEditing ? "Guardar" : "Crear"}
             </Button>

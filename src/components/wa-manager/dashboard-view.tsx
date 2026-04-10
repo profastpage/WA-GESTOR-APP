@@ -13,6 +13,7 @@ import {
   CheckCircle2, Star, Target, Rocket,
 } from "lucide-react";
 import { formatPhoneDisplay } from "@/lib/whatsapp";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 function MiniBarChart({ data, color = "#25D366" }: { data: number[]; color?: string }) {
   const max = Math.max(...data, 1);
@@ -57,6 +58,18 @@ export function DashboardView() {
   // Simulated weekly data for mini charts
   const weeklyClients = [3, 5, 2, 8, 6, 4, clients.length || 1];
   const weeklyMessages = [12, 18, 9, 22, 15, 7, stats.messagesToday || 1];
+
+  // Weekly activity data for Recharts bar chart
+  const weeklyActivityData = [
+    { day: "Lun", mensajes: 5 },
+    { day: "Mar", mensajes: 12 },
+    { day: "Mié", mensajes: 8 },
+    { day: "Jue", mensajes: 18 },
+    { day: "Vie", mensajes: 14 },
+    { day: "Sáb", mensajes: 6 },
+    { day: "Dom", mensajes: 3 },
+  ];
+  const totalWeeklyMessages = weeklyActivityData.reduce((sum, d) => sum + d.mensajes, 0);
 
   const statCards = [
     { label: "Total Clientes", value: stats.totalClients, icon: Users, color: "text-[#128C7E]", bg: "bg-[#128C7E]/10", borderColor: "border-l-[#128C7E]", chartData: weeklyClients, chartColor: "#128C7E", trend: clients.length > 0 ? "+" : null },
@@ -228,6 +241,70 @@ export function DashboardView() {
             </Button>
           </div>
         </div>
+      )}
+
+      {/* Weekly Activity Chart */}
+      {clients.length > 0 && (
+        <Card className="border-0 shadow-sm card-hover stagger-item" style={{ animationDelay: "0.35s" }}>
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <div className="h-7 w-7 rounded-lg bg-[#25D366]/10 flex items-center justify-center">
+                  <BarChart3 className="h-4 w-4 text-[#25D366]" />
+                </div>
+                Actividad Semanal
+              </h3>
+              <Badge variant="secondary" className="text-[10px] font-medium">
+                Mensajes
+              </Badge>
+            </div>
+            <div style={{ width: "100%", height: 180 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={weeklyActivityData} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="waBarGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#25D366" stopOpacity={1} />
+                      <stop offset="100%" stopColor="#128C7E" stopOpacity={0.85} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis
+                    dataKey="day"
+                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                    axisLine={false}
+                    tickLine={false}
+                    allowDecimals={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "8px",
+                      fontSize: "12px",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                    }}
+                    labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600 }}
+                    itemStyle={{ color: "#25D366" }}
+                    cursor={{ fill: "hsl(var(--muted))", opacity: 0.5 }}
+                  />
+                  <Bar
+                    dataKey="mensajes"
+                    fill="url(#waBarGradient)"
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={36}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-2 text-center">
+              Total: <span className="font-semibold text-foreground">{totalWeeklyMessages}</span> mensajes esta semana
+            </p>
+          </CardContent>
+        </Card>
       )}
 
       {/* Usage Progress (Free plan) */}

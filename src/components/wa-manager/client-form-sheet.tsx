@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import type { Client } from "@/hooks/use-data";
 
 const TAG_OPTIONS = [
@@ -32,6 +32,7 @@ interface ClientFormSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   client?: Client | null;
+  existingClients?: Client[];
   onSave: (data: {
     name: string;
     phone: string;
@@ -42,7 +43,7 @@ interface ClientFormSheetProps {
   }) => Promise<void>;
 }
 
-export function ClientFormSheet({ open, onOpenChange, client, onSave }: ClientFormSheetProps) {
+export function ClientFormSheet({ open, onOpenChange, client, existingClients = [], onSave }: ClientFormSheetProps) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -50,6 +51,7 @@ export function ClientFormSheet({ open, onOpenChange, client, onSave }: ClientFo
   const [tag, setTag] = useState<string>("Nuevo");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
 
   const isEditing = !!client;
 
@@ -61,6 +63,7 @@ export function ClientFormSheet({ open, onOpenChange, client, onSave }: ClientFo
       setCompany(client.company);
       setTag(client.tags[0] || "Nuevo");
       setNotes(client.notes);
+      setDuplicateWarning(null);
     } else {
       setName("");
       setPhone("");
@@ -68,8 +71,26 @@ export function ClientFormSheet({ open, onOpenChange, client, onSave }: ClientFo
       setCompany("");
       setTag("Nuevo");
       setNotes("");
+      setDuplicateWarning(null);
     }
   }, [client, open]);
+
+  const handlePhoneChange = (value: string) => {
+    const cleaned = value.replace(/[^0-9+]/g, "");
+    setPhone(cleaned);
+    if (cleaned.length > 0) {
+      const duplicate = existingClients.find(
+        (c) => c.phone === cleaned && c.id !== client?.id
+      );
+      if (duplicate) {
+        setDuplicateWarning(`Este teléfono ya está registrado para ${duplicate.name || duplicate.phone}`);
+      } else {
+        setDuplicateWarning(null);
+      }
+    } else {
+      setDuplicateWarning(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,10 +130,19 @@ export function ClientFormSheet({ open, onOpenChange, client, onSave }: ClientFo
               id="client-phone"
               placeholder="51933667414"
               value={phone}
-              onChange={(e) => setPhone(e.target.value.replace(/[^0-9+]/g, ""))}
+              onChange={(e) => handlePhoneChange(e.target.value)}
               required
+              className={duplicateWarning ? "border-amber-500 focus-visible:ring-amber-500" : ""}
             />
-            <p className="text-xs text-muted-foreground">Incluir código de país sin +</p>
+            {duplicateWarning && (
+              <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 text-xs mt-1">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                <span>{duplicateWarning}</span>
+              </div>
+            )}
+            {!duplicateWarning && (
+              <p className="text-xs text-muted-foreground">Incluir código de país sin +</p>
+            )}
           </div>
 
           <div className="space-y-2">

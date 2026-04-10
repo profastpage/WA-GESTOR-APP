@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useClients, useTemplates, useMessages, useFollowUps } from "@/hooks/use-data";
 import { ClientFormSheet } from "./client-form-sheet";
 import { SendMessageDialog } from "./send-message-dialog";
@@ -42,6 +42,7 @@ export function ClientsView() {
   const { followUps } = useFollowUps();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
   const [filterTag, setFilterTag] = useState("Todos");
   const [formOpen, setFormOpen] = useState(false);
   const [editClient, setEditClient] = useState<Client | null>(null);
@@ -50,6 +51,19 @@ export function ClientsView() {
   const [batchOpen, setBatchOpen] = useState(false);
   const [sortField, setSortField] = useState<SortField>("createdAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Keyboard shortcut: Ctrl+K / Cmd+K to focus search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const filtered = useMemo(() => {
     let result = clients.filter((c) => {
@@ -164,7 +178,20 @@ export function ClientsView() {
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Buscar por nombre, teléfono, email..." className="pl-9 rounded-xl h-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+        <Input
+          ref={searchInputRef}
+          placeholder="Buscar por nombre, teléfono, email..."
+          className="pl-9 rounded-xl h-10 pr-20"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onFocus={() => setSearchFocused(true)}
+          onBlur={() => setSearchFocused(false)}
+        />
+        {!searchFocused && !searchTerm && (
+          <kbd className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none hidden sm:inline-flex h-5 items-center gap-0.5 rounded border border-border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+            <span className="text-xs">{navigator.userAgent.includes("Mac") ? "⌘" : "Ctrl"}</span>K
+          </kbd>
+        )}
       </div>
 
       {/* Filters Row: Tags + Sort */}
@@ -308,7 +335,7 @@ export function ClientsView() {
         </div>
       )}
 
-      <ClientFormSheet open={formOpen} onOpenChange={(open) => { setFormOpen(open); if (!open) setEditClient(null); }} client={editClient} onSave={handleSave} />
+      <ClientFormSheet open={formOpen} onOpenChange={(open) => { setFormOpen(open); if (!open) setEditClient(null); }} client={editClient} existingClients={clients} onSave={handleSave} />
       <SendMessageDialog open={!!sendClient} onOpenChange={(open) => { if (!open) setSendClient(null); }} client={sendClient} templates={templates} onSend={handleSendMessage} />
       <BatchSendDialog open={batchOpen} onOpenChange={setBatchOpen} clients={clients} templates={templates} onSend={handleSendMessage} />
       {selectedClient && (
