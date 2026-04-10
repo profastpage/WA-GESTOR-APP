@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import LoginModal from './LoginModal';
 
-export default function Layout({ children, activeView, setActiveView, isLicensed, onLogin, onLogout, user }) {
+export default function Layout({ children, activeView, setActiveView, isLicensed, onLogin, onLogout, user, showLoginButton = true }) {
   const [showLogin, setShowLogin] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isInstallable, setIsInstallable] = useState(false);
@@ -67,7 +67,12 @@ export default function Layout({ children, activeView, setActiveView, isLicensed
             <p className="text-xs text-wa-light opacity-80">Gestión de Clientes</p>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => setShowLogin(true)} className="bg-white/10 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-white/20 transition-colors">🔑 Iniciar Sesión</button>
+            {showLoginButton && (
+              <button onClick={() => setShowLogin(true)} className="bg-white/10 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-white/20 transition-colors">🔑 Iniciar Sesión</button>
+            )}
+            {!showLoginButton && user && (
+              <span className="text-xs text-wa-light truncate max-w-[120px]">{user.email}</span>
+            )}
             <span className="text-2xl">💬</span>
           </div>
         </header>
@@ -100,7 +105,12 @@ export default function Layout({ children, activeView, setActiveView, isLicensed
           <p className="text-xs text-wa-light opacity-80">Gestión de Clientes</p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setShowLogin(true)} className="bg-white/10 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-white/20 transition-colors">🔑 Iniciar Sesión</button>
+          {showLoginButton && (
+            <button onClick={() => setShowLogin(true)} className="bg-white/10 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-white/20 transition-colors">🔑 Iniciar Sesión</button>
+          )}
+          {!showLoginButton && user && (
+            <span className="text-xs text-wa-light truncate max-w-[120px]">{user.email}</span>
+          )}
           {isInstallable && (
             <button
               onClick={handleInstall}

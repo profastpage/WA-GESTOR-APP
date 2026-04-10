@@ -8,17 +8,31 @@ export default function LoginModal({ onClose, onLogin }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isRegister) {
-      await register(form.email, form.password, form.name);
-    } else {
-      await login(form.email, form.password);
+    try {
+      if (isRegister) {
+        await register(form.email, form.password, form.name);
+      } else {
+        await login(form.email, form.password);
+      }
+      // Redirect after successful login
+      setTimeout(() => {
+        window.location.href = '/clientes';
+      }, 500);
+    } catch (err) {
+      // Error is handled by useAuth
     }
-    if (onLogin) onLogin();
   };
 
   const handleGoogleLogin = async () => {
-    await loginWithGoogle();
-    if (onLogin) onLogin();
+    try {
+      await loginWithGoogle();
+      // Redirect after successful login
+      setTimeout(() => {
+        window.location.href = '/clientes';
+      }, 500);
+    } catch (err) {
+      // Error is handled by useAuth
+    }
   };
 
   return (

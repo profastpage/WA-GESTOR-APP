@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import ClientList from './components/ClientList';
@@ -21,14 +21,23 @@ const DEMO_TEMPLATES = [
   { id: 'demo_t3', name: 'Despedida', text: 'Gracias por tu contacto {nombre}, que tengas un excelente día.' }
 ];
 
+// Obtener ruta actual
+const getCurrentRoute = () => {
+  const path = window.location.pathname.replace(/\/$/, '');
+  if (path === '/admin') return 'admin';
+  if (path === '/clientes') return 'clientes';
+  return 'landing';
+};
+
 export default function App() {
   const [activeView, setActiveView] = useState('dashboard');
   const [isLicensed, setIsLicensed] = useState(() => {
     return localStorage.getItem('wa_license_active') === 'true';
   });
 
-  // Firebase auth (opcional - super admin)
-  const { user, logout, isSuperAdmin } = useAuth();
+  // Firebase auth
+  const { user, logout, isSuperAdmin, loading: authLoading } = useAuth();
+  const currentRoute = getCurrentRoute();
 
   const [clients, setClients] = useLocalStorage('wa_clients', []);
   const [templates, setTemplates] = useLocalStorage('wa_templates', []);
@@ -39,11 +48,59 @@ export default function App() {
   const [messageLog, setMessageLog] = useLocalStorage('wa_log', []);
   const logMessage = (clientId) => setMessageLog(prev => [...prev, { clientId, timestamp: Date.now() }]);
 
+  // Redirección automática basada en rol
+  useEffect(() => {
+    if (authLoading) return;
+    
+    if (isSuperAdmin && currentRoute !== 'admin') {
+      window.location.href = '/admin';
+    } else if (user && !isSuperAdmin && currentRoute === 'landing') {
+      window.location.href = '/clientes';
+    } else if (!user && (currentRoute === 'admin' || currentRoute === 'clientes')) {
+      window.location.href = '/';
+    }
+  }, [user, isSuperAdmin, currentRoute, authLoading]);
+
+  // Mostrar loading mientras verifica auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-wa-dark"></div>
+      </div>
+    );
+  }
+
   // Super Admin Panel
   if (isSuperAdmin) {
     return <SuperAdminPanel user={user} onLogout={logout} />;
   }
 
+  // Client Panel (logged in regular users)
+  if (user && !isSuperAdmin) {
+    const renderView = () => {
+      switch (activeView) {
+        case 'dashboard': return <Dashboard clients={clients} messageLog={messageLog} isLicensed={true} user={user} />;
+        case 'clients': return <ClientList clients={clients} setClients={setClients} templates={templates} setTemplates={setTemplates} logMessage={logMessage} isLicensed={true} user={user} />;
+        case 'templates': return <TemplateManager templates={templates} setTemplates={setTemplates} isLicensed={true} user={user} />;
+        default: return <Dashboard clients={clients} messageLog={messageLog} isLicensed={true} user={user} />;
+      }
+    };
+
+    return (
+      <Layout 
+        activeView={activeView} 
+        setActiveView={setActiveView} 
+        isLicensed={true}
+        onLogout={logout}
+        user={user}
+        showLoginButton={false}
+      >
+        <div className="page-enter">{renderView()}</div>
+      </Layout>
+    );
+  }
+
+  // Landing Page (public/demo)
   const renderView = () => {
     const props = {
       clients: displayClients,
@@ -70,6 +127,7 @@ export default function App() {
       onLogin={() => {}}
       onLogout={logout}
       user={user}
+      showLoginButton={true}
     >
       <div className="page-enter">{renderView()}</div>
     </Layout>
