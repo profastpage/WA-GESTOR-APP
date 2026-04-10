@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { AVAILABLE_VARS } from './ClientList';
 
-export default function TemplateManager({ templates, setTemplates, isLicensed, isApproved }) {
+export default function TemplateManager({ templates, setTemplates, isLicensed, isApproved, onSave, onDelete }) {
   const [showForm, setShowForm] = useState(false);
   const [editTemplate, setEditTemplate] = useState(null);
   const [form, setForm] = useState({ name: '', content: '', category: 'general' });
@@ -21,10 +21,14 @@ export default function TemplateManager({ templates, setTemplates, isLicensed, i
     
     const tmpl = { ...form, id: editTemplate?.id || Date.now().toString(), usageCount: editTemplate?.usageCount || 0, createdAt: editTemplate?.createdAt || Date.now() };
 
-    if (editTemplate) {
-      setTemplates(prev => prev.map(t => t.id === editTemplate.id ? tmpl : t));
-    } else {
-      setTemplates(prev => [...prev, tmpl]);
+    if (onSave) {
+      onSave(tmpl);
+    } else if (setTemplates) {
+      if (editTemplate) {
+        setTemplates(prev => prev.map(t => t.id === editTemplate.id ? tmpl : t));
+      } else {
+        setTemplates(prev => [...prev, tmpl]);
+      }
     }
     
     setShowForm(false);
@@ -39,7 +43,9 @@ export default function TemplateManager({ templates, setTemplates, isLicensed, i
   };
 
   const handleDelete = (id) => {
-    if (confirm('¿Eliminar esta plantilla?')) {
+    if (onDelete) {
+      onDelete(id);
+    } else if (setTemplates && confirm('¿Eliminar esta plantilla?')) {
       setTemplates(prev => prev.filter(t => t.id !== id));
     }
   };
@@ -66,8 +72,8 @@ export default function TemplateManager({ templates, setTemplates, isLicensed, i
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-3">
-          <button onClick={() => { setShowForm(false); setEditTemplate(null); }} className="text-gray-500 hover:text-gray-800 text-xl">←</button>
-          <h2 className="text-2xl font-bold text-gray-800">{editTemplate ? 'Editar Plantilla' : 'Nueva Plantilla'}</h2>
+          <button onClick={() => { setShowForm(false); setEditTemplate(null); }} className="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white text-xl">←</button>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white">{editTemplate ? 'Editar Plantilla' : 'Nueva Plantilla'}</h2>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -81,7 +87,7 @@ export default function TemplateManager({ templates, setTemplates, isLicensed, i
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categoría</label>
               <div className="flex flex-wrap gap-2">
                 {categories.map(cat => (
-                  <button key={cat.value} type="button" onClick={() => setForm({...form, category: cat.value})} className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${form.category === cat.value ? 'bg-wa-dark text-white' : 'bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200'}`}>{cat.label}</button>
+                  <button key={cat.value} type="button" onClick={() => setForm({...form, category: cat.value})} className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${form.category === cat.value ? 'bg-wa-dark text-white' : 'bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-500'}`}>{cat.label}</button>
                 ))}
               </div>
             </div>
@@ -91,7 +97,7 @@ export default function TemplateManager({ templates, setTemplates, isLicensed, i
             <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-3">Variables disponibles</h3>
             <div className="flex flex-wrap gap-2 mb-4">
               {AVAILABLE_VARS.map(v => (
-                <button key={v.key} type="button" onClick={() => insertVar(v.key)} className="px-3 py-1.5 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-100 transition-colors border border-blue-200 dark:border-blue-700" title={v.desc}>
+                <button key={v.key} type="button" onClick={() => insertVar(v.key)} className="px-3 py-1.5 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors border border-blue-200 dark:border-blue-700" title={v.desc}>
                   {v.key}
                 </button>
               ))}
@@ -121,7 +127,7 @@ export default function TemplateManager({ templates, setTemplates, isLicensed, i
       </div>
 
       {templates.length === 0 ? (
-        <div className="text-center py-10 text-gray-400">
+        <div className="text-center py-10 text-gray-400 dark:text-gray-500">
           <p className="text-4xl mb-2">📝</p>
           <p className="font-medium">Sin plantillas aún</p>
         </div>
@@ -136,14 +142,14 @@ export default function TemplateManager({ templates, setTemplates, isLicensed, i
                     <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300">{tmpl.category || 'general'}</span>
                   </div>
                   <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 whitespace-pre-wrap">{tmpl.content || tmpl.text}</p>
-                  <div className="flex items-center gap-4 mt-3 text-xs text-gray-400">
+                  <div className="flex items-center gap-4 mt-3 text-xs text-gray-400 dark:text-gray-500">
                     {tmpl.usageCount > 0 && <span>📊 Usada {tmpl.usageCount} veces</span>}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => copyToClipboard(tmpl.content || tmpl.text || '')}
-                    className={`p-2 rounded-lg transition-colors ${isApproved ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 hover:bg-blue-200' : 'bg-gray-100 dark:bg-gray-600 text-gray-400 cursor-not-allowed'}`}
+                    className={`p-2 rounded-lg transition-colors ${isApproved ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900' : 'bg-gray-100 dark:bg-gray-600 text-gray-400 dark:text-gray-500 cursor-not-allowed'}`}
                     title={isApproved ? 'Copiar plantilla' : 'Solo para cuentas aprobadas'}
                     disabled={!isApproved}
                   >
