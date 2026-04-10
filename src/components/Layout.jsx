@@ -67,7 +67,7 @@ export default function Layout({ children, activeView, setActiveView, isLicensed
             <p className="text-xs text-wa-light opacity-80">Gestión de Clientes</p>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => setShowLogin(true)} className="bg-white/10 px-2 py-1 rounded-lg text-xs hover:bg-white/20 transition-colors">🔑</button>
+            <button onClick={() => setShowLogin(true)} className="bg-white/10 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-white/20 transition-colors">🔑 Iniciar Sesión</button>
             <span className="text-2xl">💬</span>
           </div>
         </header>
@@ -100,7 +100,7 @@ export default function Layout({ children, activeView, setActiveView, isLicensed
           <p className="text-xs text-wa-light opacity-80">Gestión de Clientes</p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setShowLogin(true)} className="bg-white/10 px-2 py-1 rounded-lg text-xs hover:bg-white/20 transition-colors">🔑</button>
+          <button onClick={() => setShowLogin(true)} className="bg-white/10 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-white/20 transition-colors">🔑 Iniciar Sesión</button>
           {isInstallable && (
             <button
               onClick={handleInstall}
