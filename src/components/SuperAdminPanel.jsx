@@ -1,74 +1,14 @@
-import { useState, useEffect } from 'react';
-import { collection, addDoc, getDocs, query, where, orderBy, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../firebase';
+import { useState } from 'react';
+import { useUsers } from '../hooks/useAuth';
 
 export default function SuperAdminPanel({ user, onLogout }) {
-  const [codes, setCodes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [newCode, setNewCode] = useState({ type: 'pro', duration: 'anual', price: '120' });
-  const [generatedCode, setGeneratedCode] = useState('');
-
-  useEffect(() => {
-    loadCodes();
-  }, []);
-
-  const loadCodes = async () => {
-    try {
-      const q = query(collection(db, 'activationCodes'), orderBy('createdAt', 'desc'));
-      const snapshot = await getDocs(q);
-      setCodes(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
-    } catch (err) {
-      console.error('Error loading codes:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const generateCode = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let code = 'WA-';
-    for (let i = 0; i < 12; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
-      if (i === 3 || i === 7) code += '-';
-    }
-    return code;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const code = generateCode();
-    setGeneratedCode(code);
-    
-    try {
-      await addDoc(collection(db, 'activationCodes'), {
-        code,
-        ...newCode,
-        createdAt: serverTimestamp(),
-        createdBy: user.uid,
-        usedBy: null,
-        usedAt: null,
-        active: true
-      });
-      loadCodes();
-      setShowForm(false);
-      setNewCode({ type: 'pro', duration: 'anual', price: '120' });
-    } catch (err) {
-      console.error('Error creating code:', err);
-    }
-  };
-
-  const deleteCode = async (id) => {
-    if (confirm('¿Eliminar este código?')) {
-      await deleteDoc(doc(db, 'activationCodes', id));
-      loadCodes();
-    }
-  };
+  const { users, loading, approveUser, revokeUser, deleteUser } = useUsers();
+  const [activeTab, setActiveTab] = useState('users');
 
   const stats = {
-    total: codes.length,
-    used: codes.filter(c => c.usedBy).length,
-    available: codes.filter(c => !c.usedBy && c.active).length
+    total: users.filter(u => !u.deleted).length,
+    approved: users.filter(u => u.approved && !u.deleted).length,
+    pending: users.filter(u => !u.approved && !u.deleted).length
   };
 
   return (
@@ -83,13 +23,20 @@ export default function SuperAdminPanel({ user, onLogout }) {
               <p className="text-xs text-red-100 opacity-80">{user?.email}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={onLogout} className="bg-white/20 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-white/30 transition-colors">
-              🚪 Salir
-            </button>
-          </div>
+          <button onClick={onLogout} className="bg-white/20 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-white/30 transition-colors">
+            🚪 Salir
+          </button>
         </div>
       </header>
+
+      {/* Tabs */}
+      <div className="bg-white border-b border-gray-200 px-4">
+        <div className="flex gap-4">
+          <button onClick={() => setActiveTab('users')} className={`py-3 px-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'users' ? 'border-red-600 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+            👥 Usuarios ({stats.total})
+          </button>
+        </div>
+      </div>
 
       {/* Main */}
       <main className="flex-1 overflow-y-auto p-4 pb-24">
@@ -97,65 +44,59 @@ export default function SuperAdminPanel({ user, onLogout }) {
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 text-center">
             <p className="text-3xl font-bold text-gray-800">{stats.total}</p>
-            <p className="text-xs text-gray-500">Total Códigos</p>
+            <p className="text-xs text-gray-500">Total Usuarios</p>
           </div>
           <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 text-center">
-            <p className="text-3xl font-bold text-green-600">{stats.available}</p>
-            <p className="text-xs text-gray-500">Disponibles</p>
+            <p className="text-3xl font-bold text-green-600">{stats.approved}</p>
+            <p className="text-xs text-gray-500">Aprobados</p>
           </div>
           <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 text-center">
-            <p className="text-3xl font-bold text-blue-600">{stats.used}</p>
-            <p className="text-xs text-gray-500">Usados</p>
+            <p className="text-3xl font-bold text-yellow-600">{stats.pending}</p>
+            <p className="text-xs text-gray-500">Pendientes</p>
           </div>
         </div>
 
-        {/* Generated Code Display */}
-        {generatedCode && (
-          <div className="bg-green-50 border border-green-200 rounded-2xl p-6 mb-6 text-center">
-            <p className="text-sm text-green-600 mb-2">✅ Código generado exitosamente:</p>
-            <p className="text-2xl font-mono font-bold text-green-800 select-all">{generatedCode}</p>
-            <p className="text-xs text-green-500 mt-2">Copia este código y compártelo con el cliente</p>
-          </div>
-        )}
-
-        {/* Create Code Button */}
-        <button
-          onClick={() => setShowForm(true)}
-          className="w-full bg-red-600 text-white font-semibold py-3 rounded-xl hover:bg-red-700 transition-colors shadow-lg mb-6"
-        >
-          + Generar Código de Activación
-        </button>
-
-        {/* Codes List */}
+        {/* Users List */}
         <div className="space-y-3">
-          <h3 className="font-semibold text-gray-700">Códigos Generados</h3>
+          <h3 className="font-semibold text-gray-700">Usuarios Registrados</h3>
           {loading ? (
             <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div></div>
-          ) : codes.length === 0 ? (
+          ) : users.filter(u => !u.deleted).length === 0 ? (
             <div className="text-center py-8 text-gray-400">
-              <p className="text-4xl mb-2">🔑</p>
-              <p>No hay códigos aún</p>
+              <p className="text-4xl mb-2">👥</p>
+              <p>No hay usuarios registrados aún</p>
             </div>
           ) : (
-            codes.map(c => (
-              <div key={c.id} className={`bg-white p-4 rounded-xl shadow-sm border-l-4 ${c.usedBy ? 'border-gray-400 opacity-60' : 'border-green-500'}`}>
+            users.filter(u => !u.deleted).map(u => (
+              <div key={u.id} className={`bg-white p-4 rounded-xl shadow-sm border-l-4 ${u.approved ? 'border-green-500' : 'border-yellow-500'}`}>
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <p className="font-mono font-bold text-lg text-gray-800">{c.code}</p>
-                    <div className="flex gap-3 mt-2 text-xs">
-                      <span className={`px-2 py-1 rounded-full font-bold ${c.type === 'pro' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
-                        {c.type.toUpperCase()}
-                      </span>
-                      <span className="px-2 py-1 bg-gray-100 rounded-full">{c.duration}</span>
-                      <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full font-semibold">S/{c.price}</span>
-                      {c.usedBy && <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full">Usado</span>}
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-gray-800">{u.displayName || 'Sin nombre'}</span>
+                      {u.email === 'admin@wamanager.com' && <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-bold">👑 ADMIN</span>}
+                      {u.approved && <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">✅ Aprobado</span>}
+                      {!u.approved && <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700">⏳ Pendiente</span>}
                     </div>
-                    {c.usedBy && (
-                      <p className="text-xs text-gray-500 mt-2">Usado por: {c.usedBy}</p>
+                    <p className="text-sm text-gray-500 mt-1">{u.email}</p>
+                    {u.createdAt && (
+                      <p className="text-xs text-gray-400 mt-1">📅 Registrado: {u.createdAt.toDate ? u.createdAt.toDate().toLocaleDateString('es') : 'N/A'}</p>
                     )}
                   </div>
-                  {!c.usedBy && (
-                    <button onClick={() => deleteCode(c.id)} className="text-red-400 hover:text-red-600 p-2">🗑️</button>
+                  {u.email !== 'admin@wamanager.com' && (
+                    <div className="flex items-center gap-2">
+                      {!u.approved ? (
+                        <button onClick={() => approveUser(u.id)} className="bg-green-100 text-green-700 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-green-200 transition-colors">
+                          ✅ Aprobar
+                        </button>
+                      ) : (
+                        <button onClick={() => revokeUser(u.id)} className="bg-yellow-100 text-yellow-700 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-yellow-200 transition-colors">
+                          ⏳ Revocar
+                        </button>
+                      )}
+                      <button onClick={() => deleteUser(u.id)} className="bg-gray-100 text-red-400 p-2 rounded-lg hover:bg-red-50 transition-colors">
+                        🗑️
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -163,45 +104,6 @@ export default function SuperAdminPanel({ user, onLogout }) {
           )}
         </div>
       </main>
-
-      {/* Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4" onClick={() => setShowForm(false)}>
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
-            <div className="bg-red-600 text-white p-6 rounded-t-3xl">
-              <h2 className="text-xl font-bold">🔑 Generar Código</h2>
-              <p className="text-xs text-red-100 mt-1">Configura los detalles del código de activación</p>
-            </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Licencia</label>
-                <select value={newCode.type} onChange={(e) => setNewCode({...newCode, type: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none bg-white">
-                  <option value="pro">Pro</option>
-                  <option value="premium">Premium</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Duración</label>
-                <select value={newCode.duration} onChange={(e) => setNewCode({...newCode, duration: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none bg-white">
-                  <option value="mensual">Mensual</option>
-                  <option value="anual">Anual</option>
-                  <option value="lifetime">De por vida</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Precio (S/)</label>
-                <input type="number" value={newCode.price} onChange={(e) => setNewCode({...newCode, price: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none" placeholder="120" />
-              </div>
-              <button type="submit" className="w-full bg-red-600 text-white font-semibold py-3 rounded-xl hover:bg-red-700 transition-colors shadow-lg">
-                Generar Código
-              </button>
-              <button type="button" onClick={() => setShowForm(false)} className="w-full text-gray-500 font-medium py-2 hover:text-gray-700">
-                Cancelar
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Bottom Nav */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center h-16 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-40">

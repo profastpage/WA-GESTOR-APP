@@ -35,7 +35,7 @@ function replaceVars(text, client) {
   return result;
 }
 
-export default function ClientList({ clients, setClients, templates, logMessage, isLicensed }) {
+export default function ClientList({ clients, setClients, templates, logMessage, isLicensed, user, isApproved }) {
   const [showForm, setShowForm] = useState(false);
   const [editClient, setEditClient] = useState(null);
   const [filterTag, setFilterTag] = useState('Todos');
@@ -85,9 +85,21 @@ export default function ClientList({ clients, setClients, templates, logMessage,
         ))}
       </div>
 
-      <div className="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded-xl text-xs">
-        📲 <strong>Mensajes:</strong> Se envían al número de empresa <strong>933 667 414</strong> con el mensaje prerellenado.
-      </div>
+      {user && !isApproved && (
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded-xl text-xs">
+          ⏳ <strong>Cuenta Demo:</strong> Los mensajes se envían al número de empresa <strong>933 667 414</strong>. Contacta al administrador para activar tu licencia.
+        </div>
+      )}
+      {user && isApproved && (
+        <div className="bg-green-50 border border-green-200 text-green-800 p-3 rounded-xl text-xs">
+          ✅ <strong>Licencia Activa:</strong> Puedes enviar mensajes a cualquier número.
+        </div>
+      )}
+      {!user && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded-xl text-xs">
+          📲 <strong>Mensajes:</strong> Se envían al número de empresa <strong>933 667 414</strong> con el mensaje prerellenado.
+        </div>
+      )}
 
       <div className="space-y-3">
         {filteredClients.length === 0 ? (
@@ -134,8 +146,13 @@ export default function ClientList({ clients, setClients, templates, logMessage,
             <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
             <h3 className="text-lg font-bold text-gray-800 mb-1">Enviar a {actionModal.name}</h3>
             <p className="text-sm text-gray-500 mb-2">{formatPhoneDisplay(actionModal.phone)}</p>
-            <div className="bg-wa-dark text-white text-xs p-2 rounded-lg mb-4 text-center">
-              📲 Se envía a: <strong>933 667 414</strong> con mensaje prerellenado
+            <div className={`${user && !isApproved ? 'bg-yellow-50 border-yellow-200 text-yellow-800' : 'bg-wa-dark text-white'} text-xs p-2 rounded-lg mb-4 text-center`}>
+              {user && !isApproved 
+                ? '⏳ Demo: Se envía a <strong>933 667 414</strong>'
+                : user && isApproved 
+                  ? '✅ Enviando a: <strong>' + formatPhoneDisplay(actionModal.phone) + '</strong>'
+                  : '📲 Se envía a: <strong>933 667 414</strong>'
+              }
             </div>
             
             <div className="space-y-3">
@@ -143,8 +160,9 @@ export default function ClientList({ clients, setClients, templates, logMessage,
                 const preview = replaceVars(tmpl.content || tmpl.text || '', actionModal);
                 return (
                   <button key={tmpl.id} onClick={() => {
+                    const destPhone = (user && isApproved) ? actionModal.phone : COMPANY_PHONE;
                     const message = replaceVars(tmpl.content || tmpl.text || '', actionModal);
-                    window.open(generateWhatsAppLink(COMPANY_PHONE, message), '_blank');
+                    window.open(generateWhatsAppLink(destPhone, message), '_blank');
                     logMessage(actionModal.id);
                     setActionModal(null);
                   }} className="w-full text-left p-4 border border-gray-200 rounded-xl hover:border-wa-green hover:bg-wa-light transition-all group">

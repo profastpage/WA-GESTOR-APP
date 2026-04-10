@@ -7,10 +7,8 @@ import ClientList from './ClientList';
 import TemplateManager from './TemplateManager';
 import { exportService } from '../services/firestore';
 
-const COMPANY_PHONE = '51933667414';
-
 export default function ClientPanel() {
-  const { user, logout, isSuperAdmin } = useAuth();
+  const { user, logout, isSuperAdmin, isApproved } = useAuth();
   const navigate = typeof window !== 'undefined' ? window.location : null;
   const [activeView, setActiveView] = useState('dashboard');
   
@@ -90,7 +88,7 @@ export default function ClientPanel() {
       case 'dashboard':
         return <Dashboard clients={crm.clients} messageLog={[]} isLicensed={true} user={user} stats={crm.stats} loading={crm.loading} />;
       case 'clients':
-        return <ClientList clients={crm.clients} setClients={null} templates={crm.templates} logMessage={(id) => crm.sendMessage(id, null, '')} isLicensed={true} user={user} onSaveClient={handleSaveClient} onDeleteClient={handleDeleteClient} />;
+        return <ClientList clients={crm.clients} setClients={null} templates={crm.templates} logMessage={(id) => crm.sendMessage(id, null, '')} isLicensed={true} user={user} isApproved={isApproved} onSaveClient={handleSaveClient} onDeleteClient={handleDeleteClient} />;
       case 'templates':
         return <TemplateManager templates={crm.templates} setTemplates={null} isLicensed={true} user={user} onSave={handleSaveTemplate} onDelete={handleDeleteTemplate} />;
       default:

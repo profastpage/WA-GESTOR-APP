@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -9,17 +9,38 @@ import {
   signInWithPopup,
   GoogleAuthProvider
 } from 'firebase/auth';
+import { doc, setDoc, getDoc, serverTimestamp, collection, getDocs, query, orderBy } from 'firebase/firestore';
 
-const SUPER_ADMIN_EMAIL = 'admin@wamanger.com';
+const SUPER_ADMIN_EMAIL = 'admin@wamanager.com';
 
 export function useAuth() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isApproved, setIsApproved] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
+      if (user) {
+        // Check if user is approved
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          setIsApproved(userDoc.data().approved || false);
+        } else {
+          // New user - create doc with approved=false
+          await setDoc(doc(db, 'users', user.uid), {
+            email: user.email,
+            displayName: user.displayName || '',
+            createdAt: serverTimestamp(),
+            approved: false,
+            role: user.email === SUPER_ADMIN_EMAIL ? 'admin' : 'client'
+          });
+          setIsApproved(user.email === SUPER_ADMIN_EMAIL);
+        }
+      } else {
+        setIsApproved(false);
+      }
       setLoading(false);
     });
     return unsubscribe;
@@ -43,6 +64,14 @@ export function useAuth() {
       setLoading(true);
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName });
+      // Create user doc with approved=false
+      await setDoc(doc(db, 'users', cred.user.uid), {
+        email,
+        displayName,
+        createdAt: serverTimestamp(),
+        approved: false,
+        role: 'client'
+      });
     } catch (err) {
       setError(getAuthError(err.code));
     } finally {
@@ -55,7 +84,18 @@ export function useAuth() {
       setError(null);
       setLoading(true);
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      // Check if user exists, if not create with approved=false
+      const userDoc = await getDoc(doc(db, 'users', result.user.uid));
+      if (!userDoc.exists()) {
+        await setDoc(doc(db, 'users', result.user.uid), {
+          email: result.user.email,
+          displayName: result.user.displayName || '',
+          createdAt: serverTimestamp(),
+          approved: false,
+          role: result.user.email === SUPER_ADMIN_EMAIL ? 'admin' : 'client'
+        });
+      }
     } catch (err) {
       setError(getAuthError(err.code));
     } finally {
@@ -73,7 +113,46 @@ export function useAuth() {
 
   const isSuperAdmin = user?.email === SUPER_ADMIN_EMAIL;
 
-  return { user, loading, error, login, register, loginWithGoogle, logout, isSuperAdmin };
+  return { user, loading, error, login, register, loginWithGoogle, logout, isSuperAdmin, isApproved };
+}
+
+export function useUsers() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
+        const snapshot = await getDocs(q);
+        setUsers(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      } catch (err) {
+        console.error('Error loading users:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadUsers();
+  }, []);
+
+  const approveUser = async (userId) => {
+    await setDoc(doc(db, 'users', userId), { approved: true }, { merge: true });
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, approved: true } : u));
+  };
+
+  const revokeUser = async (userId) => {
+    await setDoc(doc(db, 'users', userId), { approved: false }, { merge: true });
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, approved: false } : u));
+  };
+
+  const deleteUser = async (userId) => {
+    // Note: This only removes the Firestore doc, not the Firebase Auth user
+    // To fully delete, you'd need Firebase Admin SDK
+    await setDoc(doc(db, 'users', userId), { deleted: true, approved: false }, { merge: true });
+    setUsers(prev => prev.filter(u => u.id !== userId));
+  };
+
+  return { users, loading, approveUser, revokeUser, deleteUser };
 }
 
 function getAuthError(code) {

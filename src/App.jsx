@@ -3,6 +3,7 @@ import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import ClientList from './components/ClientList';
 import TemplateManager from './components/TemplateManager';
+import ClientPanel from './components/ClientPanel';
 import SuperAdminPanel from './components/SuperAdminPanel';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useAuth } from './hooks/useAuth';
@@ -36,7 +37,7 @@ export default function App() {
   });
 
   // Firebase auth
-  const { user, logout, isSuperAdmin, loading: authLoading } = useAuth();
+  const { user, logout, isSuperAdmin, isApproved, loading: authLoading } = useAuth();
   const currentRoute = getCurrentRoute();
 
   const [clients, setClients] = useLocalStorage('wa_clients', []);
@@ -51,7 +52,7 @@ export default function App() {
   // Redirección automática basada en rol
   useEffect(() => {
     if (authLoading) return;
-    
+
     if (isSuperAdmin && currentRoute !== 'admin') {
       window.location.href = '/admin';
     } else if (user && !isSuperAdmin && currentRoute === 'landing') {
@@ -77,27 +78,7 @@ export default function App() {
 
   // Client Panel (logged in regular users)
   if (user && !isSuperAdmin) {
-    const renderView = () => {
-      switch (activeView) {
-        case 'dashboard': return <Dashboard clients={clients} messageLog={messageLog} isLicensed={true} user={user} />;
-        case 'clients': return <ClientList clients={clients} setClients={setClients} templates={templates} setTemplates={setTemplates} logMessage={logMessage} isLicensed={true} user={user} />;
-        case 'templates': return <TemplateManager templates={templates} setTemplates={setTemplates} isLicensed={true} user={user} />;
-        default: return <Dashboard clients={clients} messageLog={messageLog} isLicensed={true} user={user} />;
-      }
-    };
-
-    return (
-      <Layout 
-        activeView={activeView} 
-        setActiveView={setActiveView} 
-        isLicensed={true}
-        onLogout={logout}
-        user={user}
-        showLoginButton={false}
-      >
-        <div className="page-enter">{renderView()}</div>
-      </Layout>
-    );
+    return <ClientPanel />;
   }
 
   // Landing Page (public/demo)
@@ -120,9 +101,9 @@ export default function App() {
   };
 
   return (
-    <Layout 
-      activeView={activeView} 
-      setActiveView={setActiveView} 
+    <Layout
+      activeView={activeView}
+      setActiveView={setActiveView}
       isLicensed={isLicensed}
       onLogin={() => {}}
       onLogout={logout}
