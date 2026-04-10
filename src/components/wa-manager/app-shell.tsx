@@ -127,8 +127,8 @@ export function AppShell() {
       case "followups": return <FollowUpsView />;
       case "pricing": return <PricingView />;
       case "settings": return <SettingsView />;
-      case "admin": return user?.role === "admin" ? <AdminPanel /> : <DashboardView />;
-      default: return <DashboardView />;
+      case "admin": return user?.role === "admin" ? <AdminPanel /> : <DashboardView onNavigate={(view) => setActiveView(view as View)} />;
+      default: return <DashboardView onNavigate={(view) => setActiveView(view as View)} />;
     }
   };
 

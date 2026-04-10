@@ -102,13 +102,18 @@ export function SendMessageDialog({ open, onOpenChange, client, templates, onSen
 
         {isCustom ? (
           <div className="space-y-3 flex-1 overflow-auto">
-            <Textarea
-              placeholder="Escribe tu mensaje aquí..."
-              value={customMessage}
-              onChange={(e) => setCustomMessage(e.target.value)}
-              rows={5}
-              className="resize-none"
-            />
+            <div className="space-y-1.5">
+              <Textarea
+                placeholder="Escribe tu mensaje aquí..."
+                value={customMessage}
+                onChange={(e) => setCustomMessage(e.target.value)}
+                rows={5}
+                className="resize-none input-glow"
+              />
+              <div className="flex justify-end">
+                <span className="text-[10px] text-muted-foreground">{customMessage.length} caracteres</span>
+              </div>
+            </div>
             <div className="flex flex-wrap gap-1.5">
               {TEMPLATE_VARIABLES.map((v) => (
                 <Badge
@@ -159,8 +164,10 @@ export function SendMessageDialog({ open, onOpenChange, client, templates, onSen
           <>
             <Separator className="my-3" />
             <div>
-              <p className="mb-1.5 text-xs font-medium text-muted-foreground">Vista previa:</p>
-              <div className="wa-bubble-sent p-3 text-sm whitespace-pre-wrap">
+              <p className="mb-1.5 text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                <Sparkles className="h-3 w-3 text-[#25D366]" /> Vista previa:
+              </p>
+              <div className="wa-bubble-sent p-3 text-sm whitespace-pre-wrap stagger-item">
                 {previewText}
               </div>
             </div>
@@ -168,7 +175,7 @@ export function SendMessageDialog({ open, onOpenChange, client, templates, onSen
         )}
 
         <Button
-          className="w-full mt-3 bg-[#25D366] text-white hover:bg-[#128C7E]"
+          className="w-full mt-3 bg-[#25D366] text-white hover:bg-[#128C7E] h-11 font-semibold btn-wa press-effect"
           disabled={!previewText.trim()}
           onClick={handleSend}
         >

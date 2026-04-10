@@ -160,7 +160,7 @@ export function BatchSendDialog({ open, onOpenChange, clients, templates, onSend
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar cliente..."
-            className="pl-9 rounded-xl h-9"
+            className="pl-9 rounded-xl h-9 input-glow"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -188,18 +188,18 @@ export function BatchSendDialog({ open, onOpenChange, clients, templates, onSend
 
         {/* Client List */}
         <ScrollArea className="flex-1 -mx-6 px-6 max-h-[200px]">
-          <div className="space-y-1">
-            {filtered.map((client) => {
+          <div className="space-y-1">{filtered.map((client, idx) => {
               const isSelected = selectedIds.has(client.id);
               return (
                 <button
                   key={client.id}
                   onClick={() => toggleClient(client.id)}
-                  className={`w-full flex items-center gap-3 p-2 rounded-lg transition-all text-left ${
+                  className={`w-full flex items-center gap-3 p-2 rounded-lg transition-all text-left stagger-item ${
                     isSelected
-                      ? "bg-[#25D366]/5 border border-[#25D366]/20"
+                      ? "bg-[#25D366]/5 border border-[#25D366]/20 hover-lift"
                       : "hover:bg-muted border border-transparent"
                   }`}
+                  style={{ animationDelay: `${idx * 0.03}s` }}
                 >
                   <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
                     isSelected
@@ -259,7 +259,7 @@ export function BatchSendDialog({ open, onOpenChange, clients, templates, onSend
                 value={customMessage}
                 onChange={(e) => setCustomMessage(e.target.value)}
                 rows={3}
-                className="resize-none text-sm"
+                className="resize-none text-sm input-glow"
               />
               <div className="flex flex-wrap gap-1">
                 {TEMPLATE_VARIABLES.map((v) => (

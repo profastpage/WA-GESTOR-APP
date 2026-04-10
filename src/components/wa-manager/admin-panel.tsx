@@ -159,7 +159,7 @@ export function AdminPanel() {
             ].map((s, i) => (
               <Card
                 key={s.label}
-                className="border-0 shadow-sm stagger-item"
+                className="border-0 shadow-sm stagger-item hover-lift"
                 style={{ animationDelay: `${i * 0.08}s` }}
               >
                 <CardContent className="p-3 text-center">
@@ -184,7 +184,7 @@ export function AdminPanel() {
             <ScrollArea className="max-h-[300px]">
               <div className="space-y-2">
                 {adminUsers.length === 0 ? (
-                  <div className="text-center py-8">
+                  <div className="text-center py-8 dot-pattern rounded-xl">
                     <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
                       <Users className="h-6 w-6 text-muted-foreground/40" />
                     </div>
@@ -215,11 +215,11 @@ export function AdminPanel() {
                               )}
                               {u.isPro && <Crown className="h-3 w-3 text-amber-500" />}
                               {u.approved ? (
-                                <Badge className="text-[9px] px-1.5 h-4 bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 status-glow-green font-semibold">
+                                <Badge className="text-[9px] px-1.5 h-4 bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 status-glow-green font-semibold badge-animated">
                                   Aprobado
                                 </Badge>
                               ) : (
-                                <Badge className="text-[9px] px-1.5 h-4 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 status-glow-amber font-semibold">
+                                <Badge className="text-[9px] px-1.5 h-4 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 status-glow-amber font-semibold badge-animated">
                                   Pendiente
                                 </Badge>
                               )}
@@ -273,7 +273,7 @@ export function AdminPanel() {
                     max={50}
                     value={genCount}
                     onChange={(e) => setGenCount(Math.max(1, Math.min(50, parseInt(e.target.value) || 1)))}
-                    className="w-20 h-9 text-sm text-center"
+                    className="w-20 h-9 text-sm text-center input-glow"
                   />
                   <span className="text-xs text-muted-foreground whitespace-nowrap">claves</span>
                 </div>

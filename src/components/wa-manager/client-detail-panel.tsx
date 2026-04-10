@@ -213,7 +213,7 @@ export function ClientDetailPanel({
 
         {/* Scrollable content */}
         <ScrollArea className="flex-1 h-[calc(100vh-320px)]">
-          <div className="px-4 py-4 space-y-5">
+          <div className="px-4 py-4 space-y-5 page-enter">
             {/* Client Info Card */}
             <Card className="border-0 shadow-sm">
               <CardContent className="p-4 space-y-3">
@@ -470,7 +470,7 @@ export function ClientDetailPanel({
         {/* Footer */}
         <SheetFooter className="border-t p-4 bg-muted/30">
           <Button
-            className="w-full bg-[#25D366] text-white hover:bg-[#128C7E] h-10 font-semibold"
+            className="w-full bg-[#25D366] text-white hover:bg-[#128C7E] h-10 font-semibold btn-wa press-effect"
             onClick={onSendMessage}
           >
             <Send className="mr-2 h-4 w-4" />

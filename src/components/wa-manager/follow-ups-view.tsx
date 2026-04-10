@@ -68,13 +68,19 @@ export function FollowUpsView() {
     const d = new Date(dateStr);
     const now = new Date();
     const diffMs = now.getTime() - d.getTime();
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
+    const absDiffMs = Math.abs(diffMs);
+    const diffHours = Math.floor(absDiffMs / 3600000);
+    const diffDays = Math.floor(absDiffMs / 86400000);
+    const isPast = diffMs > 0;
+    if (isPast) {
+      if (diffHours < 1) return "Vencido hace un momento";
+      if (diffHours < 24) return `Vencido hace ${diffHours}h`;
+      return `Vencido hace ${diffDays}d`;
+    }
     if (diffHours < 1) return "Vence pronto";
     if (diffHours < 24) return `Vence en ${diffHours}h`;
     if (diffDays === 1) return "Vence mañana";
-    if (diffDays < 0) return `En ${Math.abs(diffDays)} días`;
-    return `Hace ${diffDays}d`;
+    return `En ${diffDays} días`;
   };
 
   const getClientName = (clientId: string) => {

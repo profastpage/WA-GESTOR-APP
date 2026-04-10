@@ -14,7 +14,7 @@ import {
   CheckCircle2, Star, Target, Rocket, Share2, Copy, Check,
 } from "lucide-react";
 import { formatPhoneDisplay } from "@/lib/whatsapp";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 interface DashboardViewProps {
   onNavigate?: (view: string) => void;
@@ -296,68 +296,122 @@ Generado: ${new Date().toLocaleString("es-PE")}`;
         </div>
       )}
 
-      {/* Weekly Activity Chart */}
+      {/* Charts Grid - Bar + Pie */}
       {clients.length > 0 && (
-        <Card className="border-0 shadow-sm card-hover stagger-item" style={{ animationDelay: "0.35s" }}>
-          <CardContent className="p-4 sm:p-5">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold flex items-center gap-2">
-                <div className="h-7 w-7 rounded-lg bg-[#25D366]/10 flex items-center justify-center">
-                  <BarChart3 className="h-4 w-4 text-[#25D366]" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 stagger-item" style={{ animationDelay: "0.35s" }}>
+          {/* Weekly Activity Bar Chart */}
+          <Card className="border-0 shadow-sm card-hover">
+            <CardContent className="p-4 sm:p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <div className="h-7 w-7 rounded-lg bg-[#25D366]/10 flex items-center justify-center">
+                    <BarChart3 className="h-4 w-4 text-[#25D366]" />
+                  </div>
+                  Actividad Semanal
+                </h3>
+                <Badge variant="secondary" className="text-[10px] font-medium">
+                  Mensajes
+                </Badge>
+              </div>
+              <div style={{ width: "100%", height: 180 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={weeklyActivityData} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="waBarGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#25D366" stopOpacity={1} />
+                        <stop offset="100%" stopColor="#128C7E" stopOpacity={0.85} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis
+                      dataKey="day"
+                      tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                      axisLine={false}
+                      tickLine={false}
+                      allowDecimals={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                        fontSize: "12px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                      labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600 }}
+                      itemStyle={{ color: "#25D366" }}
+                      cursor={{ fill: "hsl(var(--muted))", opacity: 0.5 }}
+                    />
+                    <Bar
+                      dataKey="mensajes"
+                      fill="url(#waBarGradient)"
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={36}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-2 text-center">
+                Total: <span className="font-semibold text-foreground">{totalWeeklyMessages}</span> mensajes esta semana
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Pie Chart for Tag Distribution */}
+          {stats.tagDistribution.length > 0 && (
+            <Card className="border-0 shadow-sm card-hover">
+              <CardContent className="p-4 sm:p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold flex items-center gap-2">
+                    <div className="h-7 w-7 rounded-lg bg-[#128C7E]/10 flex items-center justify-center">
+                      <Target className="h-4 w-4 text-[#128C7E]" />
+                    </div>
+                    Distribución por Etiquetas
+                  </h3>
                 </div>
-                Actividad Semanal
-              </h3>
-              <Badge variant="secondary" className="text-[10px] font-medium">
-                Mensajes
-              </Badge>
-            </div>
-            <div style={{ width: "100%", height: 180 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={weeklyActivityData} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="waBarGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#25D366" stopOpacity={1} />
-                      <stop offset="100%" stopColor="#128C7E" stopOpacity={0.85} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis
-                    dataKey="day"
-                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                    axisLine={false}
-                    tickLine={false}
-                    allowDecimals={false}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                      fontSize: "12px",
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                    }}
-                    labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600 }}
-                    itemStyle={{ color: "#25D366" }}
-                    cursor={{ fill: "hsl(var(--muted))", opacity: 0.5 }}
-                  />
-                  <Bar
-                    dataKey="mensajes"
-                    fill="url(#waBarGradient)"
-                    radius={[4, 4, 0, 0]}
-                    maxBarSize={36}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            <p className="text-[11px] text-muted-foreground mt-2 text-center">
-              Total: <span className="font-semibold text-foreground">{totalWeeklyMessages}</span> mensajes esta semana
-            </p>
-          </CardContent>
-        </Card>
+                <div style={{ width: "100%", height: 200 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={stats.tagDistribution}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={80}
+                        paddingAngle={3}
+                        dataKey="count"
+                        nameKey="tag"
+                        label={({ tag, count }: { tag: string; count: number }) => `${tag} (${count})`}
+                        labelLine={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}
+                      >
+                        {stats.tagDistribution.map((_, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={["#25D366", "#128C7E", "#f59e0b", "#8b5cf6", "#ef4444", "#3b82f6", "#ec4899"][index % 7]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "8px",
+                          fontSize: "12px",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                        }}
+                        labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600 }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       )}
 
       {/* Usage Progress (Free plan) */}

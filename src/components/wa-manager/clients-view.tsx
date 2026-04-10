@@ -267,7 +267,7 @@ export function ClientsView() {
                     {/* Info */}
                     <button className="flex-1 min-w-0 text-left" onClick={() => setSelectedClient(client)} aria-label={`Ver detalles de ${client.name || "cliente"}`}>
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <h3 className="font-semibold text-sm truncate hover:text-[#128C7E] transition-colors">{client.name || "Sin nombre"}</h3>
+                        <h3 className="font-semibold text-sm truncate hover:text-[#128C7E] transition-colors"><HighlightText text={client.name || "Sin nombre"} highlight={searchTerm} /></h3>
                         {client.tags.map((tag) => (
                           <Badge key={tag} className={`text-[9px] px-1.5 py-0 h-4 font-bold ${TAG_COLORS[tag] || "bg-muted"}`}>{tag}</Badge>
                         ))}
@@ -276,24 +276,24 @@ export function ClientsView() {
 
                       <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
-                          <Phone className="h-3 w-3" />{formatPhoneDisplay(client.phone) || "—"}
+                          <Phone className="h-3 w-3" /><HighlightText text={formatPhoneDisplay(client.phone) || "—"} highlight={searchTerm} />
                         </span>
                         {client.email && (
                           <span className="flex items-center gap-1 truncate">
-                            <Mail className="h-3 w-3 shrink-0" /><span className="truncate">{client.email}</span>
+                            <Mail className="h-3 w-3 shrink-0" /><span className="truncate"><HighlightText text={client.email} highlight={searchTerm} /></span>
                           </span>
                         )}
                       </div>
 
                       {client.company && (
                         <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
-                          <Building2 className="h-3 w-3" /> {client.company}
+                          <Building2 className="h-3 w-3" /> <HighlightText text={client.company} highlight={searchTerm} />
                         </p>
                       )}
 
                       {client.notes && (
                         <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1 truncate">
-                          <StickyNote className="h-3 w-3 shrink-0" /><span className="truncate">{client.notes}</span>
+                          <StickyNote className="h-3 w-3 shrink-0" /><span className="truncate"><HighlightText text={client.notes} highlight={searchTerm} /></span>
                         </p>
                       )}
 
@@ -342,6 +342,21 @@ export function ClientsView() {
         <ClientDetailPanel open={!!selectedClient} onOpenChange={(open) => { if (!open) setSelectedClient(null); }} client={selectedClient} messages={messages.filter(m => m.clientId === selectedClient.id)} followUps={followUps.filter(f => f.clientId === selectedClient.id)} onSendMessage={() => { setSelectedClient(null); setSendClient(selectedClient); }} />
       )}
     </div>
+  );
+}
+
+function HighlightText({ text, highlight, className = "" }: { text: string; highlight: string; className?: string }) {
+  if (!highlight.trim()) return <span className={className}>{text}</span>;
+  const regex = new RegExp(`(${highlight.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+  const parts = text.split(regex);
+  return (
+    <span className={className}>
+      {parts.map((part, i) =>
+        regex.test(part)
+          ? <mark key={i} className="bg-[#25D366]/25 text-foreground rounded-sm px-0.5">{part}</mark>
+          : part
+      )}
+    </span>
   );
 }
 

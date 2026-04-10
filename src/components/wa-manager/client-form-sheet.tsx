@@ -108,7 +108,7 @@ export function ClientFormSheet({ open, onOpenChange, client, existingClients = 
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="overflow-y-auto sm:max-w-lg">
+      <SheetContent className="overflow-y-auto sm:max-w-lg slide-in-bottom">
         <SheetHeader>
           <SheetTitle>{isEditing ? "Editar Cliente" : "Nuevo Cliente"}</SheetTitle>
           <SheetDescription>
@@ -124,10 +124,11 @@ export function ClientFormSheet({ open, onOpenChange, client, existingClients = 
               placeholder="Nombre del cliente"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              className="input-glow"
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 stagger-item" style={{ animationDelay: "0.1s" }}>
             <Label htmlFor="client-phone">Teléfono *</Label>
             <Input
               id="client-phone"
@@ -135,7 +136,7 @@ export function ClientFormSheet({ open, onOpenChange, client, existingClients = 
               value={phone}
               onChange={(e) => handlePhoneChange(e.target.value)}
               required
-              className={duplicateWarning ? "border-amber-500 focus-visible:ring-amber-500" : ""}
+              className={`input-glow ${duplicateWarning ? "border-amber-500 focus-visible:ring-amber-500" : ""}`}
             />
             {duplicateWarning && (
               <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 text-xs mt-1">
@@ -148,7 +149,7 @@ export function ClientFormSheet({ open, onOpenChange, client, existingClients = 
             )}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 stagger-item" style={{ animationDelay: "0.15s" }}>
             <Label htmlFor="client-email">Email</Label>
             <Input
               id="client-email"
@@ -156,23 +157,26 @@ export function ClientFormSheet({ open, onOpenChange, client, existingClients = 
               placeholder="cliente@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              className="input-glow"
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 stagger-item" style={{ animationDelay: "0.2s" }}>
             <Label htmlFor="client-company">Empresa</Label>
             <Input
               id="client-company"
               placeholder="Nombre de la empresa"
               value={company}
               onChange={(e) => setCompany(e.target.value)}
+              className="input-glow"
             />
           </div>
 
-          <div className="space-y-2">
+          <hr className="divider-gradient my-2" />
+          <div className="space-y-2 stagger-item" style={{ animationDelay: "0.25s" }}>
             <Label>Etiqueta</Label>
             <Select value={tag} onValueChange={setTag}>
-              <SelectTrigger>
+              <SelectTrigger className="input-glow">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -191,7 +195,7 @@ export function ClientFormSheet({ open, onOpenChange, client, existingClients = 
                 placeholder="Etiqueta personalizada..."
                 value={customTag}
                 onChange={(e) => setCustomTag(e.target.value)}
-                className="h-8 text-xs"
+                className="h-8 text-xs input-glow"
                 maxLength={20}
               />
               {customTag.trim() && (
@@ -212,7 +216,8 @@ export function ClientFormSheet({ open, onOpenChange, client, existingClients = 
             </div>
           </div>
 
-          <div className="space-y-2">
+          <hr className="divider-gradient my-2" />
+          <div className="space-y-2 stagger-item" style={{ animationDelay: "0.3s" }}>
             <Label htmlFor="client-notes">Notas</Label>
             <Textarea
               id="client-notes"
@@ -220,6 +225,7 @@ export function ClientFormSheet({ open, onOpenChange, client, existingClients = 
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
+              className="input-glow"
             />
           </div>
 
@@ -227,7 +233,7 @@ export function ClientFormSheet({ open, onOpenChange, client, existingClients = 
             <Button type="button" variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" className="flex-1 bg-[#25D366] text-white hover:bg-[#128C7E]" disabled={saving}>
+            <Button type="submit" className="flex-1 bg-[#25D366] text-white hover:bg-[#128C7E] press-effect" disabled={saving}>
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isEditing ? "Guardar" : "Agregar"}
             </Button>

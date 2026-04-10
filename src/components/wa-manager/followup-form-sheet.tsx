@@ -85,7 +85,7 @@ export function FollowUpFormSheet({ open, onOpenChange, clients, onSave }: Follo
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="overflow-y-auto sm:max-w-lg">
+      <SheetContent className="overflow-y-auto sm:max-w-lg slide-in-bottom">
         <SheetHeader>
           <SheetTitle>Nuevo Seguimiento</SheetTitle>
           <SheetDescription>
@@ -94,10 +94,10 @@ export function FollowUpFormSheet({ open, onOpenChange, clients, onSave }: Follo
         </SheetHeader>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <div className="space-y-2">
+          <div className="space-y-2 stagger-item" style={{ animationDelay: "0.05s" }}>
             <Label>Cliente *</Label>
             <Select value={clientId} onValueChange={setClientId} required>
-              <SelectTrigger>
+              <SelectTrigger className="input-glow">
                 <SelectValue placeholder="Seleccionar cliente" />
               </SelectTrigger>
               <SelectContent>
@@ -110,7 +110,7 @@ export function FollowUpFormSheet({ open, onOpenChange, clients, onSave }: Follo
             </Select>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 stagger-item" style={{ animationDelay: "0.1s" }}>
             <Label htmlFor="fu-title">Título *</Label>
             <Input
               id="fu-title"
@@ -118,10 +118,11 @@ export function FollowUpFormSheet({ open, onOpenChange, clients, onSave }: Follo
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
+              className="input-glow"
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 stagger-item" style={{ animationDelay: "0.15s" }}>
             <Label htmlFor="fu-desc">Descripción</Label>
             <Textarea
               id="fu-desc"
@@ -129,10 +130,11 @@ export function FollowUpFormSheet({ open, onOpenChange, clients, onSave }: Follo
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
+              className="input-glow"
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 stagger-item" style={{ animationDelay: "0.2s" }}>
             <Label htmlFor="fu-date">Fecha y hora *</Label>
             <Input
               id="fu-date"
@@ -141,43 +143,41 @@ export function FollowUpFormSheet({ open, onOpenChange, clients, onSave }: Follo
               onChange={(e) => setDueDate(e.target.value)}
               min={getMinDateTime()}
               required
+              className="input-glow"
             />
           </div>
 
-          <div className="space-y-2">
+          <hr className="divider-gradient my-2" />
+          <div className="space-y-2 stagger-item" style={{ animationDelay: "0.25s" }}>
             <Label>Prioridad</Label>
-            <Select value={priority} onValueChange={(v) => setPriority(v as "baja" | "media" | "alta")}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="baja">
-                  <span className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-green-500" />
-                    Baja
-                  </span>
-                </SelectItem>
-                <SelectItem value="media">
-                  <span className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-amber-500" />
-                    Media
-                  </span>
-                </SelectItem>
-                <SelectItem value="alta">
-                  <span className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-red-500" />
-                    Alta
-                  </span>
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              {([
+                { value: "baja" as const, label: "Baja", color: "bg-green-500", active: "bg-green-500/15 border-green-500/40 text-green-700 dark:text-green-400", dot: "bg-green-500" },
+                { value: "media" as const, label: "Media", color: "bg-amber-500", active: "bg-amber-500/15 border-amber-500/40 text-amber-700 dark:text-amber-400", dot: "bg-amber-500" },
+                { value: "alta" as const, label: "Alta", color: "bg-red-500", active: "bg-red-500/15 border-red-500/40 text-red-700 dark:text-red-400", dot: "bg-red-500" },
+              ] as const).map((p) => (
+                <button
+                  key={p.value}
+                  type="button"
+                  className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-all-300 press-effect ${
+                    priority === p.value
+                      ? `${p.active} border`
+                      : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted"
+                  }`}
+                  onClick={() => setPriority(p.value)}
+                >
+                  <span className={`h-2 w-2 rounded-full ${p.dot}`} />
+                  {p.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" className="flex-1 bg-[#25D366] text-white hover:bg-[#128C7E]" disabled={saving}>
+            <Button type="submit" className="flex-1 bg-[#25D366] text-white hover:bg-[#128C7E] press-effect" disabled={saving}>
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Crear
             </Button>

@@ -34,6 +34,8 @@ import {
   Check,
   Loader2,
   Search,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { TEMPLATE_VARIABLES } from "@/lib/whatsapp";
@@ -75,6 +77,39 @@ const CAT_DOTS: Record<string, string> = {
   cierre: "bg-purple-500",
 };
 
+function substituteVariables(text: string): React.ReactNode[] {
+  const MONTHS_ES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+  const now = new Date();
+  const todayFormatted = `${now.getDate()} de ${MONTHS_ES[now.getMonth()]}, ${now.getFullYear()}`;
+
+  const knownVars: Record<string, string> = {
+    "{nombre}": "Juan Pérez",
+    "{empresa}": "Mi Empresa SAC",
+    "{fecha}": todayFormatted,
+    "{telefono}": "+51 999 888 777",
+    "{email}": "juan@empresa.com",
+    "{servicio}": "Consultoría Empresarial",
+  };
+
+  const varRegex = /\{[^}]+\}/g;
+  const parts = text.split(varRegex);
+  const matches = text.match(varRegex);
+
+  const result: React.ReactNode[] = [];
+  parts.forEach((part, i) => {
+    if (part) result.push(part);
+    if (matches && matches[i]) {
+      const resolved = knownVars[matches[i]];
+      if (resolved) {
+        result.push(<span key={`v${i}`} className="font-semibold text-foreground">{resolved}</span>);
+      } else {
+        result.push(<span key={`v${i}`} className="text-muted-foreground/60">{matches[i]}</span>);
+      }
+    }
+  });
+  return result;
+}
+
 export function TemplatesView() {
   const { templates, loading, addTemplate, updateTemplate, deleteTemplate } = useTemplates();
   const { toast } = useToast();
@@ -83,6 +118,7 @@ export function TemplatesView() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCat, setFilterCat] = useState("all");
+  const [previewId, setPreviewId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     return templates.filter((t) => {
@@ -274,9 +310,32 @@ export function TemplatesView() {
                             {tmpl.content.length} caracteres
                           </span>
                         </div>
+
+                        {previewId === tmpl.id && (
+                          <div className="mt-3 stagger-item">
+                            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Preview</p>
+                            <div className="wa-bubble-sent rounded-xl px-4 py-3 max-w-[300px]">
+                              <p className="text-xs text-foreground/90 whitespace-pre-wrap leading-relaxed">
+                                {substituteVariables(tmpl.content)}
+                              </p>
+                              <p className="text-[9px] text-foreground/40 mt-1.5 text-right">
+                                {new Date().toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" })} ✓✓
+                              </p>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex flex-col gap-1.5 shrink-0">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className={`h-8 w-8 hover:bg-[#25D366]/10 ${previewId === tmpl.id ? "text-[#25D366]" : ""}`}
+                          onClick={() => setPreviewId(previewId === tmpl.id ? null : tmpl.id)}
+                          title="Vista previa"
+                        >
+                          {previewId === tmpl.id ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                        </Button>
                         <Button
                           size="icon"
                           variant="ghost"
