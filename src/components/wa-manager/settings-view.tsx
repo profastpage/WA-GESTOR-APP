@@ -151,11 +151,14 @@ export function SettingsView() {
   return (
     <div className="space-y-5 page-enter">
       {/* Header */}
-      <div>
-        <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
-          <Settings className="h-5 w-5 text-[#128C7E]" /> Configuración
-        </h2>
-        <p className="text-xs text-muted-foreground mt-0.5">Gestiona tu cuenta y preferencias</p>
+      <div className="flex items-center gap-3">
+        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-slate-500 to-slate-600 shadow-sm">
+          <Settings className="h-5 w-5 text-white" />
+        </div>
+        <div>
+          <h2 className="text-xl font-bold tracking-tight">Configuración</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Gestiona tu cuenta y preferencias</p>
+        </div>
       </div>
 
       {/* User Profile Card */}

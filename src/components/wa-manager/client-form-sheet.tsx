@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Plus } from "lucide-react";
 import type { Client } from "@/hooks/use-data";
 
 const TAG_OPTIONS = [
@@ -52,6 +52,7 @@ export function ClientFormSheet({ open, onOpenChange, client, existingClients = 
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
+  const [customTag, setCustomTag] = useState("");
 
   const isEditing = !!client;
 
@@ -64,6 +65,7 @@ export function ClientFormSheet({ open, onOpenChange, client, existingClients = 
       setTag(client.tags[0] || "Nuevo");
       setNotes(client.notes);
       setDuplicateWarning(null);
+      setCustomTag("");
     } else {
       setName("");
       setPhone("");
@@ -72,6 +74,7 @@ export function ClientFormSheet({ open, onOpenChange, client, existingClients = 
       setTag("Nuevo");
       setNotes("");
       setDuplicateWarning(null);
+      setCustomTag("");
     }
   }, [client, open]);
 
@@ -183,6 +186,30 @@ export function ClientFormSheet({ open, onOpenChange, client, existingClients = 
                 ))}
               </SelectContent>
             </Select>
+            <div className="flex items-center gap-2 mt-2">
+              <Input
+                placeholder="Etiqueta personalizada..."
+                value={customTag}
+                onChange={(e) => setCustomTag(e.target.value)}
+                className="h-8 text-xs"
+                maxLength={20}
+              />
+              {customTag.trim() && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-8 text-xs shrink-0"
+                  onClick={() => {
+                    if (customTag.trim() && !TAG_OPTIONS.find(t => t.value === customTag.trim())) {
+                      setTag(customTag.trim());
+                    }
+                  }}
+                >
+                  <Plus className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">

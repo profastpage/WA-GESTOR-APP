@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useStats, useClients, useMessages, useFollowUps } from "@/hooks/use-data";
 import { useAuthStore } from "@/store/auth-store";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,10 +11,14 @@ import { Progress } from "@/components/ui/progress";
 import {
   Users, MessageSquare, FileText, Clock, Crown, AlertCircle, Sparkles, TrendingUp,
   ArrowUpRight, Phone, Zap, Send, UserPlus, BarChart3, Activity, ChevronRight,
-  CheckCircle2, Star, Target, Rocket,
+  CheckCircle2, Star, Target, Rocket, Share2, Copy, Check,
 } from "lucide-react";
 import { formatPhoneDisplay } from "@/lib/whatsapp";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+
+interface DashboardViewProps {
+  onNavigate?: (view: string) => void;
+}
 
 function MiniBarChart({ data, color = "#25D366" }: { data: number[]; color?: string }) {
   const max = Math.max(...data, 1);
@@ -35,12 +40,13 @@ function MiniBarChart({ data, color = "#25D366" }: { data: number[]; color?: str
   );
 }
 
-export function DashboardView() {
+export function DashboardView({ onNavigate }: DashboardViewProps) {
   const { stats, loading } = useStats();
   const { clients } = useClients();
   const { messages } = useMessages();
   const { followUps } = useFollowUps();
   const { isAuthenticated, user } = useAuthStore();
+  const [copiedStats, setCopiedStats] = useState(false);
 
   const getGreeting = () => {
     const h = new Date().getHours();
@@ -81,6 +87,22 @@ export function DashboardView() {
   const freeLimit = 30;
   const clientUsage = user?.isPro ? 0 : Math.min(Math.round((stats.totalClients / freeLimit) * 100), 100);
   const isNearLimit = !user?.isPro && stats.totalClients >= 25;
+
+  const handleCopyStats = () => {
+    const statsText = `📊 WA Manager - Resumen de Actividad
+━━━━━━━━━━━━━━━━━━━━━━
+👥 Clientes: ${stats.totalClients}
+💬 Mensajes hoy: ${stats.messagesToday}
+📋 Plantillas: ${stats.totalTemplates}
+⏰ Seguimientos pendientes: ${stats.pendingFollowUps}
+━━━━━━━━━━━━━━━━━━━━━━
+Generado: ${new Date().toLocaleString("es-PE")}`;
+
+    navigator.clipboard.writeText(statsText).then(() => {
+      setCopiedStats(true);
+      setTimeout(() => setCopiedStats(false), 2000);
+    });
+  };
 
   if (loading) {
     return (
@@ -205,6 +227,34 @@ export function DashboardView() {
         ))}
       </div>
 
+      {/* Stats Export */}
+      {stats.totalClients > 0 && (
+        <Card className="border-0 shadow-sm card-hover stagger-item" style={{ animationDelay: "0.25s" }}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-[#128C7E]/10 flex items-center justify-center">
+                  <Share2 className="h-4 w-4 text-[#128C7E]" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-semibold">Compartir Estadísticas</h3>
+                  <p className="text-[10px] text-muted-foreground">Copia un resumen de tu actividad</p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-xs h-8 press-effect"
+                onClick={handleCopyStats}
+              >
+                {copiedStats ? <Check className="mr-1 h-3 w-3 text-[#25D366]" /> : <Copy className="mr-1 h-3 w-3" />}
+                {copiedStats ? "Copiado" : "Copiar"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Quick Actions */}
       {clients.length > 0 && (
         <div className="stagger-item" style={{ animationDelay: "0.3s" }}>
@@ -215,6 +265,7 @@ export function DashboardView() {
             <Button
               variant="outline"
               className="h-auto py-3.5 flex-col gap-2 rounded-xl hover:bg-[#25D366]/5 hover:border-[#25D366]/30 transition-all press-effect"
+              onClick={() => onNavigate?.("clients")}
             >
               <div className="h-9 w-9 rounded-lg bg-[#25D366]/10 flex items-center justify-center">
                 <UserPlus className="h-4 w-4 text-[#25D366]" />
@@ -224,6 +275,7 @@ export function DashboardView() {
             <Button
               variant="outline"
               className="h-auto py-3.5 flex-col gap-2 rounded-xl hover:bg-[#128C7E]/5 hover:border-[#128C7E]/30 transition-all press-effect"
+              onClick={() => onNavigate?.("clients")}
             >
               <div className="h-9 w-9 rounded-lg bg-[#128C7E]/10 flex items-center justify-center">
                 <Send className="h-4 w-4 text-[#128C7E]" />
@@ -233,6 +285,7 @@ export function DashboardView() {
             <Button
               variant="outline"
               className="h-auto py-3.5 flex-col gap-2 rounded-xl hover:bg-amber-500/5 hover:border-amber-500/30 transition-all press-effect"
+              onClick={() => onNavigate?.("followups")}
             >
               <div className="h-9 w-9 rounded-lg bg-amber-500/10 flex items-center justify-center">
                 <BarChart3 className="h-4 w-4 text-amber-500" />

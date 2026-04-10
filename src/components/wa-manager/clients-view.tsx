@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useClients, useTemplates, useMessages, useFollowUps } from "@/hooks/use-data";
 import { ClientFormSheet } from "./client-form-sheet";
 import { SendMessageDialog } from "./send-message-dialog";
@@ -17,7 +17,7 @@ import type { Client, Template } from "@/hooks/use-data";
 import {
   Search, Plus, MessageCircle, Pencil, Trash2, Phone, Mail,
   Building2, StickyNote, Users, Send, ArrowUpDown, ArrowUp, ArrowDown,
-  LayoutGrid, List, ChevronDown,
+  ChevronDown,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {

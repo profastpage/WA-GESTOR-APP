@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuthStore } from "@/store/auth-store";
 import { useClients, useTemplates, useFollowUps } from "@/hooks/use-data";
 import { DashboardView } from "./dashboard-view";
@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   LayoutDashboard, Users, FileText, Clock, Crown, ShieldCheck, Settings,
   Download, LogOut, LogIn, Moon, Sun, ChevronDown, Menu, X, Bell,
-  TrendingUp, MessageCircle, Plus,
+  TrendingUp, MessageCircle, Plus, ChevronUp,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -28,6 +28,8 @@ export function AppShell() {
   const [activeView, setActiveView] = useState<View>("dashboard");
   const [loginOpen, setLoginOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const mainRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated, user, isLoading, logout } = useAuthStore();
   const { theme, setTheme } = useTheme();
   const { clients } = useClients();
@@ -37,6 +39,25 @@ export function AppShell() {
   useEffect(() => {
     useAuthStore.getState().checkSession();
   }, []);
+
+  const handleScroll = useCallback(() => {
+    if (mainRef.current) {
+      setShowScrollTop(mainRef.current.scrollTop > 300);
+    }
+  }, []);
+
+  const scrollToTop = useCallback(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, []);
+
+  useEffect(() => {
+    const mainEl = mainRef.current;
+    if (!mainEl) return;
+    mainEl.addEventListener("scroll", handleScroll, { passive: true });
+    return () => mainEl.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
 
   const pendingFollowUpsCount = followUps.filter(f => !f.completed).length;
   const hasNotifications = pendingFollowUpsCount > 0;
@@ -100,7 +121,7 @@ export function AppShell() {
 
   const renderView = () => {
     switch (activeView) {
-      case "dashboard": return <DashboardView />;
+      case "dashboard": return <DashboardView onNavigate={(view) => setActiveView(view as View)} />;
       case "clients": return <ClientsView />;
       case "templates": return <TemplatesView />;
       case "followups": return <FollowUpsView />;
@@ -246,11 +267,25 @@ export function AppShell() {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
+      <main ref={mainRef} className="flex-1 overflow-y-auto">
         <div className="max-w-2xl mx-auto px-4 py-5 pb-24 md:pb-6" key={activeView}>
           {renderView()}
         </div>
       </main>
+
+      {/* Scroll to Top Button (Desktop) */}
+      <div className={`hidden md:flex fixed bottom-20 right-6 z-50 transition-all duration-300 ${
+        showScrollTop ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-4 pointer-events-none"
+      }`}>
+        <Button
+          className="h-10 w-10 rounded-full bg-[#25D366] hover:bg-[#128C7E] text-white shadow-lg float-action p-0"
+          onClick={scrollToTop}
+          title="Volver arriba"
+          aria-label="Scroll to top"
+        >
+          <ChevronUp className="h-5 w-5" />
+        </Button>
+      </div>
 
       {/* Floating WhatsApp Action Button (Desktop) */}
       <div className="hidden md:flex fixed bottom-6 right-6 z-50 flex-col gap-2">
