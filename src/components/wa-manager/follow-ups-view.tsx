@@ -19,6 +19,7 @@ import {
   User,
   Calendar,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const PRIORITY_CONFIG: Record<string, { color: string; label: string }> = {
   alta: { color: "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/40 dark:text-red-300 dark:border-red-800", label: "Alta" },
@@ -29,6 +30,7 @@ const PRIORITY_CONFIG: Record<string, { color: string; label: string }> = {
 export function FollowUpsView() {
   const { clients } = useClients();
   const { followUps, loading, addFollowUp, completeFollowUp, deleteFollowUp } = useFollowUps();
+  const { toast } = useToast();
   const [formOpen, setFormOpen] = useState(false);
 
   const handleSave = async (data: {
@@ -40,6 +42,7 @@ export function FollowUpsView() {
     priority: "baja" | "media" | "alta";
   }) => {
     await addFollowUp(data as any);
+    toast({ title: "Seguimiento creado", description: `"${data.title}" se ha agregado` });
     setFormOpen(false);
   };
 
@@ -144,7 +147,10 @@ export function FollowUpsView() {
                           size="icon"
                           variant="ghost"
                           className="h-8 w-8 text-[#25D366] hover:bg-[#25D366]/10"
-                          onClick={() => completeFollowUp(fu.id)}
+                          onClick={() => {
+                            toast({ title: "Seguimiento completado", description: `"${fu.title}" marcado como completo` });
+                            completeFollowUp(fu.id);
+                          }}
                           title="Completar"
                         >
                           <CheckCircle2 className="h-4 w-4" />
@@ -153,7 +159,12 @@ export function FollowUpsView() {
                           size="icon"
                           variant="ghost"
                           className="h-8 w-8 text-red-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
-                          onClick={() => { if (confirm("¿Eliminar seguimiento?")) deleteFollowUp(fu.id); }}
+                          onClick={() => {
+                            if (confirm("¿Eliminar seguimiento?")) {
+                              toast({ title: "Seguimiento eliminado", description: `"${fu.title}" ha sido eliminado` });
+                              deleteFollowUp(fu.id);
+                            }
+                          }}
                           title="Eliminar"
                         >
                           <Trash2 className="h-3.5 w-3.5" />

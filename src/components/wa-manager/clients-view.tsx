@@ -25,6 +25,7 @@ import {
   Users,
   Filter,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const TAG_OPTIONS = ["Todos", "Nuevo", "Pendiente", "VIP"];
 
@@ -38,6 +39,7 @@ export function ClientsView() {
   const { clients, loading, addClient, updateClient, deleteClient } = useClients();
   const { templates } = useTemplates();
   const { logMessage } = useMessages();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTag, setFilterTag] = useState("Todos");
   const [formOpen, setFormOpen] = useState(false);
@@ -60,8 +62,10 @@ export function ClientsView() {
   const handleSave = async (data: { name: string; phone: string; email: string; company: string; tags: string[]; notes: string }) => {
     if (editClient) {
       await updateClient(editClient.id, data);
+      toast({ title: "Cliente actualizado", description: `${data.name || editClient.name} ha sido actualizado` });
     } else {
       await addClient(data as any);
+      toast({ title: "Cliente agregado", description: `${data.name || "Nuevo cliente"} se ha agregado correctamente` });
     }
     setFormOpen(false);
     setEditClient(null);
@@ -69,7 +73,9 @@ export function ClientsView() {
 
   const handleDelete = async (id: string) => {
     if (confirm("¿Eliminar este cliente?")) {
+      const client = clients.find(c => c.id === id);
       await deleteClient(id);
+      toast({ title: "Cliente eliminado", description: `${client?.name || "Cliente"} ha sido eliminado` });
     }
   };
 

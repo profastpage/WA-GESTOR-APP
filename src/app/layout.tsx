@@ -17,6 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "WA Manager - Gestión de Clientes WhatsApp",
   description: "Gestiona tus clientes, plantillas y mensajes de WhatsApp de forma profesional. CRM completo para negocios.",
+  manifest: "/manifest.json",
   keywords: ["WhatsApp", "CRM", "Gestión de clientes", "Mensajes", "Plantillas", "WA Manager"],
   authors: [{ name: "Fast Page Pro" }],
   icons: {

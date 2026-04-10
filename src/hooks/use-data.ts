@@ -74,6 +74,21 @@ function parseTags(raw: any): string[] {
   return ["Nuevo"];
 }
 
+function parseNotes(raw: any): string {
+  if (!raw) return "";
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.map((n: any) => typeof n === "string" ? n : n.text || "").join("\n");
+      }
+      return parsed;
+    } catch { return raw; }
+  }
+  if (Array.isArray(raw)) return raw.map((n: any) => typeof n === "string" ? n : n.text || "").join("\n");
+  return "";
+}
+
 export function useClients() {
   const { isAuthenticated } = useAuthStore();
   const [clients, setClients] = useState<Client[]>([]);
@@ -85,7 +100,7 @@ export function useClients() {
         const res = await fetch("/api/clients");
         const data = await res.json();
         const arr = data.clients || data.data || data || [];
-        setClients(arr.map((c: any) => ({ ...c, tags: parseTags(c.tags) })));
+        setClients(arr.map((c: any) => ({ ...c, tags: parseTags(c.tags), notes: parseNotes(c.notes) })));
       } catch { /* silent */ }
     } else {
       setClients(getLS<Client[]>("wa_demo_clients", []));

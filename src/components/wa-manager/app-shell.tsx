@@ -8,6 +8,7 @@ import { ClientsView } from "./clients-view";
 import { TemplatesView } from "./templates-view";
 import { FollowUpsView } from "./follow-ups-view";
 import { PricingView } from "./pricing-view";
+import { SettingsView } from "./settings-view";
 import { AdminPanel } from "./admin-panel";
 import { LoginDialog } from "./login-dialog";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import {
   Clock,
   Crown,
   ShieldCheck,
+  Settings,
   Download,
   LogOut,
   LogIn,
@@ -32,7 +34,7 @@ import { useTheme } from "next-themes";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { formatPhoneDisplay } from "@/lib/whatsapp";
 
-type View = "dashboard" | "clients" | "templates" | "followups" | "pricing" | "admin";
+type View = "dashboard" | "clients" | "templates" | "followups" | "pricing" | "settings" | "admin";
 
 export function AppShell() {
   const [activeView, setActiveView] = useState<View>("dashboard");
@@ -82,6 +84,7 @@ export function AppShell() {
     { id: "templates", label: "Plantillas", icon: FileText },
     { id: "followups", label: "Seguimiento", icon: Clock },
     { id: "pricing", label: "Precios", icon: Crown },
+    { id: "settings", label: "Ajustes", icon: Settings },
     { id: "admin", label: "Admin", icon: ShieldCheck, show: user?.role === "admin" },
   ];
 
@@ -110,6 +113,7 @@ export function AppShell() {
       case "templates": return <TemplatesView />;
       case "followups": return <FollowUpsView />;
       case "pricing": return <PricingView />;
+      case "settings": return <SettingsView />;
       case "admin": return user?.role === "admin" ? <AdminPanel /> : <DashboardView />;
       default: return <DashboardView />;
     }
@@ -261,7 +265,7 @@ export function AppShell() {
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t z-40 safe-area-bottom">
         <div className="flex items-center justify-around h-16">
-          {navItems.slice(0, 4).map((item) => (
+          {navItems.filter(i => i.show !== false).slice(0, 4).map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveView(item.id)}
@@ -278,11 +282,11 @@ export function AppShell() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className={`flex flex-col items-center justify-center w-full h-full gap-0.5 transition-colors ${
-                ["pricing", "admin"].includes(activeView)
+                ["pricing", "settings", "admin"].includes(activeView)
                   ? "text-[#128C7E] dark:text-[#25D366]"
                   : "text-muted-foreground"
               }`}>
-                <Crown className="h-5 w-5" />
+                <Settings className="h-5 w-5" />
                 <span className="text-[10px] font-medium">Más</span>
               </button>
             </DropdownMenuTrigger>
@@ -290,10 +294,16 @@ export function AppShell() {
               <DropdownMenuItem onClick={() => setActiveView("pricing")}>
                 <Crown className="mr-2 h-4 w-4" /> Precios
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setActiveView("settings")}>
+                <Settings className="mr-2 h-4 w-4" /> Ajustes
+              </DropdownMenuItem>
               {user?.role === "admin" && (
-                <DropdownMenuItem onClick={() => setActiveView("admin")}>
-                  <ShieldCheck className="mr-2 h-4 w-4" /> Panel Admin
-                </DropdownMenuItem>
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setActiveView("admin")}>
+                    <ShieldCheck className="mr-2 h-4 w-4" /> Panel Admin
+                  </DropdownMenuItem>
+                </>
               )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleExportCSV}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTemplates } from "@/hooks/use-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +33,9 @@ import {
   Sparkles,
   Check,
   Loader2,
+  Search,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { TEMPLATE_VARIABLES } from "@/lib/whatsapp";
 import type { Template } from "@/hooks/use-data";
 
@@ -57,15 +59,32 @@ const CAT_COLORS: Record<string, string> = {
 
 export function TemplatesView() {
   const { templates, loading, addTemplate, updateTemplate, deleteTemplate } = useTemplates();
+  const { toast } = useToast();
   const [formOpen, setFormOpen] = useState(false);
   const [editTmpl, setEditTmpl] = useState<Template | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterCat, setFilterCat] = useState("all");
+
+  const filtered = useMemo(() => {
+    return templates.filter((t) => {
+      const q = searchTerm.toLowerCase();
+      const matchSearch = !q ||
+        t.name?.toLowerCase().includes(q) ||
+        t.content?.toLowerCase().includes(q) ||
+        t.category?.toLowerCase().includes(q);
+      const matchCat = filterCat === "all" || t.category === filterCat;
+      return matchSearch && matchCat;
+    });
+  }, [templates, searchTerm, filterCat]);
 
   const handleSave = async (data: { name: string; content: string; category: string }) => {
     if (editTmpl) {
       await updateTemplate(editTmpl.id, data);
+      toast({ title: "Plantilla actualizada", description: `"${data.name}" ha sido actualizada` });
     } else {
       await addTemplate(data as any);
+      toast({ title: "Plantilla creada", description: `"${data.name}" se ha creado correctamente` });
     }
     setFormOpen(false);
     setEditTmpl(null);
@@ -73,7 +92,9 @@ export function TemplatesView() {
 
   const handleDelete = async (id: string) => {
     if (confirm("¿Eliminar esta plantilla?")) {
+      const tmpl = templates.find(t => t.id === id);
       await deleteTemplate(id);
+      toast({ title: "Plantilla eliminada", description: `"${tmpl?.name || "Plantilla"}" ha sido eliminada` });
     }
   };
 
@@ -103,7 +124,7 @@ export function TemplatesView() {
           <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
             <FileText className="h-5 w-5 text-[#25D366]" /> Plantillas
           </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">{templates.length} plantillas</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{filtered.length} de {templates.length} plantillas</p>
         </div>
         <Button
           size="sm"
@@ -112,6 +133,44 @@ export function TemplatesView() {
         >
           <Plus className="mr-1.5 h-4 w-4" /> Nueva
         </Button>
+      </div>
+
+      {/* Search & Filter */}
+      <div className="space-y-2.5">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar plantilla..."
+            className="pl-9 rounded-xl h-10"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
+          <button
+            onClick={() => setFilterCat("all")}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+              filterCat === "all"
+                ? "bg-[#128C7E] text-white shadow-sm"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            Todas
+          </button>
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat.value}
+              onClick={() => setFilterCat(cat.value)}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                filterCat === cat.value
+                  ? "bg-[#128C7E] text-white shadow-sm"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              {cat.emoji} {cat.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Tip */}
@@ -126,18 +185,22 @@ export function TemplatesView() {
         </p>
       </div>
 
-      {templates.length === 0 ? (
+      {filtered.length === 0 ? (
         <div className="text-center py-12">
           <FileText className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-          <p className="text-sm font-medium text-muted-foreground">Sin plantillas aún</p>
-          <Button variant="link" className="text-[#25D366] mt-2" onClick={() => { setEditTmpl(null); setFormOpen(true); }}>
-            <Plus className="mr-1 h-3.5 w-3.5" /> Crear primera plantilla
-          </Button>
+          <p className="text-sm font-medium text-muted-foreground">{
+            searchTerm || filterCat !== "all" ? "No se encontraron resultados" : "Sin plantillas aún"
+          }</p>
+          {!searchTerm && filterCat === "all" && (
+            <Button variant="link" className="text-[#25D366] mt-2" onClick={() => { setEditTmpl(null); setFormOpen(true); }}>
+              <Plus className="mr-1 h-3.5 w-3.5" /> Crear primera plantilla
+            </Button>
+          )}
         </div>
       ) : (
-        <ScrollArea className="max-h-[calc(100vh-280px)]">
+        <ScrollArea className="max-h-[calc(100vh-380px)]">
           <div className="space-y-2.5">
-            {templates.map((tmpl) => {
+            {filtered.map((tmpl) => {
               const cat = CATEGORIES.find(c => c.value === tmpl.category);
               return (
                 <Card key={tmpl.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
@@ -226,13 +289,13 @@ function TemplateFormSheet({
   const isEditing = !!template;
 
   // Reset form when sheet opens
-  useState(() => {
+  useEffect(() => {
     if (open) {
       setName(template?.name || "");
       setContent(template?.content || "");
       setCategory(template?.category || "general");
     }
-  });
+  }, [open, template]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
