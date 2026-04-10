@@ -61,6 +61,19 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
   const overdueFollowUps = pendingFollowUps.filter(f => new Date(f.dueDate) < new Date());
   const completedFollowUps = followUps.filter(f => f.completed).slice(-5).reverse();
 
+  // Completion streak: follow-ups completed in last 7 days
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const completionStreak = followUps.filter(
+    (f) => f.completed && f.completedAt && new Date(f.completedAt) >= sevenDaysAgo
+  ).length;
+  const getStreakMessage = (count: number) => {
+    if (count === 0) return "¡Empieza tu racha hoy!";
+    if (count <= 3) return "¡Buen comienzo! 🌱";
+    if (count <= 7) return "¡Sigue así! 🔥";
+    return "¡Increíble! ⭐";
+  };
+
   // Simulated weekly data for mini charts
   const weeklyClients = [3, 5, 2, 8, 6, 4, clients.length || 1];
   const weeklyMessages = [12, 18, 9, 22, 15, 7, stats.messagesToday || 1];
@@ -294,6 +307,31 @@ Generado: ${new Date().toLocaleString("es-PE")}`;
             </Button>
           </div>
         </div>
+      )}
+
+      {/* Completion Streak */}
+      {clients.length > 0 && (
+        <Card className="border-0 shadow-sm card-hover stagger-item" style={{ animationDelay: "0.32s" }}>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
+                <Zap className="h-5 w-5 text-amber-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-semibold">Racha de Completados</h3>
+                  <span className="text-xl font-bold text-amber-500">{completionStreak}</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Seguimientos completados en los últimos 7 días
+                </p>
+                <p className="text-xs font-medium text-amber-600 dark:text-amber-400 mt-1">
+                  {getStreakMessage(completionStreak)}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Charts Grid - Bar + Pie */}

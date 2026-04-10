@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useAuthStore } from "@/store/auth-store";
 import { useTheme } from "next-themes";
 import { useToast } from "@/hooks/use-toast";
@@ -40,6 +40,8 @@ import {
   Sun,
   Save,
   Crown,
+  HardDriveDownload,
+  HardDriveUpload,
 } from "lucide-react";
 
 function getInitials(name: string) {
@@ -147,6 +149,70 @@ export function SettingsView() {
   };
 
   const isDark = theme === "dark";
+
+  // Backup/Restore state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const pendingImportData = useRef<any>(null);
+
+  const handleExportBackup = () => {
+    const backupKeys = ["wa_demo_clients", "wa_demo_templates", "wa_demo_messages", "wa_demo_followups", "wa_session"];
+    const backup: Record<string, unknown> = {};
+    for (const key of backupKeys) {
+      const val = localStorage.getItem(key);
+      if (val) {
+        try { backup[key] = JSON.parse(val); } catch { backup[key] = val; }
+      }
+    }
+    const jsonStr = JSON.stringify(backup, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `wa-manager-backup-${new Date().toISOString().split("T")[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "Respaldo exportado", description: "Tu archivo de respaldo ha sido descargado" });
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target?.result as string);
+        pendingImportData.current = data;
+        // The AlertDialog will handle confirmation via handleConfirmImport
+      } catch {
+        toast({ title: "Error", description: "El archivo seleccionado no es un JSON válido", variant: "destructive" });
+      }
+    };
+    reader.readAsText(file);
+    // Reset input so same file can be re-selected
+    e.target.value = "";
+  };
+
+  const handleConfirmImport = () => {
+    const data = pendingImportData.current;
+    if (!data) {
+      toast({ title: "Error", description: "No se encontraron datos para importar", variant: "destructive" });
+      return;
+    }
+    try {
+      const keys = ["wa_demo_clients", "wa_demo_templates", "wa_demo_messages", "wa_demo_followups", "wa_session"];
+      let restoredCount = 0;
+      for (const key of keys) {
+        if (data[key] !== undefined) {
+          localStorage.setItem(key, JSON.stringify(data[key]));
+          restoredCount++;
+        }
+      }
+      pendingImportData.current = null;
+      toast({ title: "Respaldo restaurado", description: `Se restauraron ${restoredCount} categorías de datos correctamente` });
+    } catch {
+      toast({ title: "Error", description: "No se pudo restaurar el respaldo. Verifica el archivo.", variant: "destructive" });
+    }
+  };
 
   return (
     <div className="space-y-5 page-enter">
@@ -407,6 +473,68 @@ export function SettingsView() {
               </div>
               <Switch className="data-[state=checked]:bg-[#25D366]" />
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Data Backup/Restore */}
+      <Card className="border-0 shadow-sm bg-card">
+        <CardContent className="p-5">
+          <div className="flex items-center gap-2.5 mb-4">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-500/10">
+              <HardDriveDownload className="h-[18px] w-[18px] text-teal-500" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold">Respaldo de Datos</h3>
+              <p className="text-[10px] text-muted-foreground">Exporta e importa todos tus datos</p>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="flex-1 text-xs h-9 press-effect"
+              onClick={handleExportBackup}
+            >
+              <HardDriveDownload className="mr-1.5 h-3.5 w-3.5" />
+              Exportar
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="flex-1 text-xs h-9 press-effect"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <HardDriveUpload className="mr-1.5 h-3.5 w-3.5" />
+                  Importar
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>¿Restaurar respaldo?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esto reemplazará todos tus datos actuales (clientes, plantillas, mensajes y seguimientos) con los datos del archivo de respaldo. Esta acción no se puede deshacer.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-[#25D366] text-white hover:bg-[#128C7E]"
+                    onClick={handleConfirmImport}
+                  >
+                    Sí, restaurar
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={handleFileSelect}
+            />
           </div>
         </CardContent>
       </Card>

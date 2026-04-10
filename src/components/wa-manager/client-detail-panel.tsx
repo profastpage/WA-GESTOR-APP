@@ -168,7 +168,7 @@ export function ClientDetailPanel({
         </div>
 
         {/* Quick action bar */}
-        <div className="flex gap-2 px-4 py-3 bg-muted/50 border-b">
+        <div className="flex gap-2 px-4 py-3 bg-muted/50 border-b nav-glass">
           {client.phone && (
             <a
               href={`tel:${client.phone.replace(/\D/g, "")}`}
@@ -215,7 +215,7 @@ export function ClientDetailPanel({
         <ScrollArea className="flex-1 h-[calc(100vh-320px)]">
           <div className="px-4 py-4 space-y-5 page-enter">
             {/* Client Info Card */}
-            <Card className="border-0 shadow-sm">
+            <Card className="border-0 shadow-sm card-depth glass-surface rounded-xl">
               <CardContent className="p-4 space-y-3">
                 <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                   <User className="h-3 w-3" />
@@ -293,7 +293,7 @@ export function ClientDetailPanel({
 
             {/* Notes */}
             {client.notes && (
-              <Card className="border-0 shadow-sm">
+              <Card className="border-0 shadow-sm card-depth glass-surface rounded-xl">
                 <CardContent className="p-4">
                   <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 mb-2">
                     <StickyNote className="h-3 w-3" />
@@ -307,7 +307,7 @@ export function ClientDetailPanel({
             )}
 
             {/* Statistics */}
-            <Card className="border-0 shadow-sm">
+            <Card className="border-0 shadow-sm card-depth glass-surface rounded-xl">
               <CardContent className="p-4">
                 <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 mb-3">
                   <MessageCircle className="h-3 w-3" />
@@ -343,16 +343,17 @@ export function ClientDetailPanel({
               </h4>
 
               {sortedMessages.length === 0 ? (
-                <div className="text-center py-6 bg-muted/30 rounded-xl">
+                <div className="text-center py-6 bg-muted/30 rounded-xl glass-surface">
                   <MessageCircle className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
                   <p className="text-xs text-muted-foreground">Sin mensajes aún</p>
                 </div>
               ) : (
                 <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {sortedMessages.slice(0, 20).map((msg) => (
+                  {sortedMessages.slice(0, 20).map((msg, idx) => (
                     <div
                       key={msg.id}
-                      className="wa-bubble-sent p-2.5 rounded-xl relative group"
+                      className="wa-bubble-sent p-2.5 rounded-xl relative group stagger-item hover-scale-sm"
+                      style={{ animationDelay: `${idx * 0.03}s` }}
                     >
                       <p className="text-xs text-foreground/90 whitespace-pre-wrap leading-relaxed pr-8">
                         {msg.content}
@@ -391,7 +392,7 @@ export function ClientDetailPanel({
               </h4>
 
               {followUps.length === 0 ? (
-                <div className="text-center py-6 bg-muted/30 rounded-xl">
+                <div className="text-center py-6 bg-muted/30 rounded-xl glass-surface">
                   <Calendar className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
                   <p className="text-xs text-muted-foreground">Sin seguimientos</p>
                 </div>
@@ -404,7 +405,8 @@ export function ClientDetailPanel({
                     return (
                       <div
                         key={fu.id}
-                        className={`border rounded-xl p-3 ${priority.color} border`}
+                        className={`border rounded-xl p-3 ${priority.color} border card-depth stagger-item`}
+                        style={{ animationDelay: "0.05s" }}
                       >
                         <div className="flex items-start gap-2">
                           {priority.icon}
@@ -468,7 +470,7 @@ export function ClientDetailPanel({
         </ScrollArea>
 
         {/* Footer */}
-        <SheetFooter className="border-t p-4 bg-muted/30">
+        <SheetFooter className="border-t p-4 bg-muted/30 nav-glass">
           <Button
             className="w-full bg-[#25D366] text-white hover:bg-[#128C7E] h-10 font-semibold btn-wa press-effect"
             onClick={onSendMessage}

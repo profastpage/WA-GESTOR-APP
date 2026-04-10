@@ -20,6 +20,7 @@ import {
   TrendingUp, MessageCircle, Plus, ChevronUp,
 } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useToast } from "@/hooks/use-toast";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 type View = "dashboard" | "clients" | "templates" | "followups" | "pricing" | "settings" | "admin";
@@ -30,8 +31,10 @@ export function AppShell() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const mainRef = useRef<HTMLDivElement>(null);
+  const overdueToastShown = useRef(false);
   const { isAuthenticated, user, isLoading, logout } = useAuthStore();
   const { theme, setTheme } = useTheme();
+  const { toast } = useToast();
   const { clients } = useClients();
   const { templates } = useTemplates();
   const { followUps } = useFollowUps();
@@ -39,6 +42,25 @@ export function AppShell() {
   useEffect(() => {
     useAuthStore.getState().checkSession();
   }, []);
+
+  // Overdue follow-up notification toast (show once)
+  useEffect(() => {
+    if (overdueToastShown.current) return;
+    const timer = setTimeout(() => {
+      const now = new Date();
+      const overdueCount = followUps.filter(
+        (f) => !f.completed && new Date(f.dueDate) < now
+      ).length;
+      if (overdueCount > 0) {
+        overdueToastShown.current = true;
+        toast({
+          title: `⚠️ Tienes ${overdueCount} seguimiento(s) vencido(s)`,
+          description: "Revísalos ahora.",
+        });
+      }
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [followUps, toast]);
 
   const handleScroll = useCallback(() => {
     if (mainRef.current) {

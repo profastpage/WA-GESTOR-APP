@@ -66,24 +66,24 @@ export function SendMessageDialog({ open, onOpenChange, client, templates, onSen
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-hidden flex flex-col card-depth border-glow-green animate-fade-scale">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 stagger-item" style={{ animationDelay: "0.05s" }}>
             <MessageSquare className="h-5 w-5 text-[#25D366]" />
             Enviar Mensaje
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="stagger-item" style={{ animationDelay: "0.1s" }}>
             A <span className="font-medium text-foreground">{client.name}</span> · {client.phone}
           </DialogDescription>
         </DialogHeader>
 
         <WhatsAppComplianceNotice className="mb-4" />
 
-        <div className="flex gap-2 mb-4">
+        <div className="flex gap-2 mb-4 stagger-item" style={{ animationDelay: "0.15s" }}>
           <Button
             size="sm"
             variant={isCustom ? "outline" : "default"}
-            className={!isCustom ? "bg-[#25D366] text-white hover:bg-[#128C7E]" : ""}
+            className={!isCustom ? "bg-[#25D366] text-white hover:bg-[#128C7E] press-effect" : "press-effect"}
             onClick={() => setIsCustom(false)}
           >
             <FileText className="mr-1.5 h-3.5 w-3.5" />
@@ -92,7 +92,7 @@ export function SendMessageDialog({ open, onOpenChange, client, templates, onSen
           <Button
             size="sm"
             variant={isCustom ? "default" : "outline"}
-            className={isCustom ? "bg-[#25D366] text-white hover:bg-[#128C7E]" : ""}
+            className={isCustom ? "bg-[#25D366] text-white hover:bg-[#128C7E] press-effect" : "press-effect"}
             onClick={() => setIsCustom(true)}
           >
             <Edit3 className="mr-1.5 h-3.5 w-3.5" />
@@ -108,7 +108,7 @@ export function SendMessageDialog({ open, onOpenChange, client, templates, onSen
                 value={customMessage}
                 onChange={(e) => setCustomMessage(e.target.value)}
                 rows={5}
-                className="resize-none input-glow"
+                className="resize-none input-glow focus-lift"
               />
               <div className="flex justify-end">
                 <span className="text-[10px] text-muted-foreground">{customMessage.length} caracteres</span>
@@ -119,7 +119,7 @@ export function SendMessageDialog({ open, onOpenChange, client, templates, onSen
                 <Badge
                   key={v.key}
                   variant="outline"
-                  className="cursor-pointer hover:bg-[#25D366]/10 hover:border-[#25D366]/30 transition-colors text-xs"
+                  className="cursor-pointer hover:bg-[#25D366]/10 hover:border-[#25D366]/30 transition-colors text-xs press-effect ring-wa"
                   onClick={() => setCustomMessage(prev => prev + v.key)}
                 >
                   <Sparkles className="mr-1 h-3 w-3" />
@@ -140,9 +140,9 @@ export function SendMessageDialog({ open, onOpenChange, client, templates, onSen
                   <button
                     key={t.id}
                     onClick={() => setSelectedTemplate(selectedTemplate?.id === t.id ? null : t)}
-                    className={`w-full text-left rounded-lg border p-3 transition-all ${
+                    className={`w-full text-left rounded-lg border p-3 transition-all card-depth ${
                       selectedTemplate?.id === t.id
-                        ? "border-[#25D366] bg-[#25D366]/5 ring-1 ring-[#25D366]/20"
+                        ? "border-[#25D366] bg-[#25D366]/5 ring-1 ring-[#25D366]/20 card-glow-success"
                         : "hover:border-muted-foreground/20 hover:bg-muted/50"
                     }`}
                   >
@@ -167,7 +167,7 @@ export function SendMessageDialog({ open, onOpenChange, client, templates, onSen
               <p className="mb-1.5 text-xs font-medium text-muted-foreground flex items-center gap-1.5">
                 <Sparkles className="h-3 w-3 text-[#25D366]" /> Vista previa:
               </p>
-              <div className="wa-bubble-sent p-3 text-sm whitespace-pre-wrap stagger-item">
+              <div className="wa-bubble-sent p-3 text-sm whitespace-pre-wrap stagger-item animate-fade-scale">
                 {previewText}
               </div>
             </div>
@@ -175,7 +175,8 @@ export function SendMessageDialog({ open, onOpenChange, client, templates, onSen
         )}
 
         <Button
-          className="w-full mt-3 bg-[#25D366] text-white hover:bg-[#128C7E] h-11 font-semibold btn-wa press-effect"
+          id="send-whatsapp-btn"
+          className="w-full mt-3 bg-[#25D366] text-white hover:bg-[#128C7E] h-11 font-semibold btn-wa press-effect focus-lift"
           disabled={!previewText.trim()}
           onClick={handleSend}
         >

@@ -23,12 +23,12 @@ export function PricingView() {
   return (
     <div className="space-y-5 page-enter">
       {/* Section Header with Gradient Icon */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 stagger-item" style={{ animationDelay: "0.02s" }}>
         <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 shadow-sm">
           <Crown className="h-5 w-5 text-white" />
         </div>
         <div>
-          <h2 className="text-xl font-bold tracking-tight">Planes y Precios</h2>
+          <h2 className="text-xl font-bold tracking-tight wa-gradient-heading">Planes y Precios</h2>
           <p className="text-xs text-muted-foreground mt-0.5">Elige el plan perfecto para tu negocio</p>
         </div>
       </div>
@@ -47,7 +47,7 @@ export function PricingView() {
       <div className="grid gap-4">
         {/* Free Plan */}
         <Card
-          className={`border-2 card-hover stagger-item ${!isPro ? "border-foreground/20" : "border-muted opacity-60"} relative`}
+          className={`border-2 card-hover hover-lift card-depth stagger-item ${!isPro ? "border-foreground/20" : "border-muted opacity-60"} relative`}
           style={{ animationDelay: "0.08s" }}
         >
           {!isPro && (
@@ -63,7 +63,7 @@ export function PricingView() {
               </div>
               <div className="text-right">
                 <p className="text-3xl font-bold">S/0</p>
-                <p className="text-[10px] text-muted-foreground">Para siempre</p>
+                <p className="text-[10px] text-xs-gradient">Para siempre</p>
               </div>
             </div>
             <ul className="space-y-3">
@@ -94,10 +94,10 @@ export function PricingView() {
 
         {/* Pro Plan with Gradient Border */}
         <Card
-          className="border-2 border-transparent gradient-border card-hover stagger-item relative overflow-hidden bg-[#25D366]/[0.02] dark:bg-[#25D366]/[0.04]"
+          className="border-2 border-transparent gradient-border card-hover hover-lift card-depth stagger-item relative overflow-hidden bg-[#25D366]/[0.02] dark:bg-[#25D366]/[0.04]"
           style={{ animationDelay: "0.18s" }}
         >
-          <div className="absolute top-0 right-0 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white text-[10px] font-bold px-3 py-1.5 rounded-bl-xl animate-bounce-in shadow-sm">
+          <div className="absolute top-0 right-0 bg-gradient-to-r from-[#25D366] to-[#128C7E] text-white text-[10px] font-bold px-3 py-1.5 rounded-bl-xl animate-bounce-in shadow-sm badge-dot">
             RECOMENDADO
           </div>
           <CardContent className="p-5">
@@ -110,7 +110,7 @@ export function PricingView() {
               </div>
               <div className="text-right">
                 <p className="text-3xl font-bold text-[#128C7E]">S/99</p>
-                <p className="text-[10px] text-muted-foreground">Pago único</p>
+                <p className="text-[10px] text-xs-gradient">Pago único</p>
               </div>
             </div>
             <ul className="space-y-3">
@@ -165,7 +165,7 @@ export function PricingView() {
 
       {/* How to activate — with Number Circles and Connecting Lines */}
       {!isPro && (
-        <Card className="border-0 shadow-sm stagger-item" style={{ animationDelay: "0.28s" }}>
+        <Card className="border-0 shadow-sm card-depth stagger-item" style={{ animationDelay: "0.28s" }}>
           <CardContent className="p-4">
             <h4 className="text-sm font-semibold mb-4 flex items-center gap-2">
               <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-[#128C7E]/10">

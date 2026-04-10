@@ -17,7 +17,7 @@ import type { Client, Template } from "@/hooks/use-data";
 import {
   Search, Plus, MessageCircle, Pencil, Trash2, Phone, Mail,
   Building2, StickyNote, Users, Send, ArrowUpDown, ArrowUp, ArrowDown,
-  ChevronDown,
+  ChevronDown, Clock,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -25,6 +25,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const TAG_OPTIONS = ["Todos", "Nuevo", "Pendiente", "VIP"];
+
+const formatLastContact = (dateStr: string | null) => {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  if (diffMins < 1) return "Ahora";
+  if (diffMins < 60) return `Hace ${diffMins}m`;
+  if (diffHours < 24) return `Hace ${diffHours}h`;
+  if (diffDays === 1) return "Ayer";
+  if (diffDays < 7) return `Hace ${diffDays}d`;
+  return d.toLocaleDateString("es-PE", { day: "numeric", month: "short" });
+};
 
 const TAG_COLORS: Record<string, string> = {
   Nuevo: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
@@ -294,6 +310,13 @@ export function ClientsView() {
                       {client.notes && (
                         <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1 truncate">
                           <StickyNote className="h-3 w-3 shrink-0" /><span className="truncate"><HighlightText text={client.notes} highlight={searchTerm} /></span>
+                        </p>
+                      )}
+
+                      {formatLastContact(client.lastContact) && (
+                        <p className="text-[10px] text-muted-foreground/60 mt-1 flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          Último contacto: {formatLastContact(client.lastContact)}
                         </p>
                       )}
 
