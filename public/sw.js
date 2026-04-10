@@ -1,4 +1,4 @@
-const CACHE_NAME = 'wa-manager-v6';
+const CACHE_NAME = 'wa-manager-v7';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -7,9 +7,9 @@ const urlsToCache = [
   '/icon-512.png'
 ];
 
-// Instalación - forzar actualización inmediata
+// Instalación
 self.addEventListener('install', event => {
-  console.log('[SW] Instalando v6 - FORCE UPDATE...');
+  console.log('[SW] Instalando v7...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(urlsToCache))
@@ -17,40 +17,43 @@ self.addEventListener('install', event => {
   );
 });
 
-// Activación - limpiar TODO el caché viejo
+// Activación
 self.addEventListener('activate', event => {
-  console.log('[SW] Activando v6 - LIMPIANDO CACHE...');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames
           .filter(name => name !== CACHE_NAME)
-          .map(name => {
-            console.log('[SW] Borrando cache viejo:', name);
-            return caches.delete(name);
-          })
+          .map(name => caches.delete(name))
       );
     }).then(() => self.clients.claim())
   );
 });
 
-// Fetch - Network First (prioridad a contenido nuevo)
+// Fetch - Cache First para GET, Network para POST
 self.addEventListener('fetch', event => {
+  // No cachear POST requests
+  if (event.request.method === 'POST') {
+    return;
+  }
+  
+  // Solo cachear requests básicos (no Firebase, no API)
+  if (event.request.url.includes('firebase') || event.request.url.includes('firestore')) {
+    return;
+  }
+
   event.respondWith(
-    fetch(event.request)
+    caches.match(event.request)
       .then(response => {
-        // Guardar en caché para uso offline
-        if (response && response.status === 200) {
+        if (response) return response;
+        return fetch(event.request).then(response => {
+          if (!response || response.status !== 200 || response.type !== 'basic') {
+            return response;
+          }
           const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseToCache);
-          });
-        }
-        return response;
-      })
-      .catch(() => {
-        // Si no hay internet, usar caché
-        return caches.match(event.request);
-      })
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
+          return response;
+        });
+      }).catch(() => fetch(event.request))
   );
 });

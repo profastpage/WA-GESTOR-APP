@@ -1,7 +1,7 @@
 // Firebase Configuration
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
@@ -21,13 +21,7 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
-// Habilitar persistencia offline (datos se guardan en el navegador)
-enableIndexedDbPersistence(db).catch((err) => {
-  if (err.code === 'failed-precondition') {
-    console.warn('Múltiples pestañas abiertas, persistencia offline no disponible');
-  } else if (err.code === 'unimplemented') {
-    console.warn('Navegador no soporta persistencia offline');
-  }
-});
+// No habilitar persistencia automática - causa errores en multi-tab
+// Firebase usará cache en memoria por defecto
 
 export default app;

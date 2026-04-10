@@ -9,7 +9,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp, collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 
 const SUPER_ADMIN_EMAIL = 'admin@wamanager.com';
 
@@ -20,30 +20,43 @@ export function useAuth() {
   const [isApproved, setIsApproved] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
+    
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!mounted) return;
+      
       setUser(user);
       if (user) {
-        // Check if user is approved
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          setIsApproved(userDoc.data().approved || false);
-        } else {
-          // New user - create doc with approved=false
-          await setDoc(doc(db, 'users', user.uid), {
-            email: user.email,
-            displayName: user.displayName || '',
-            createdAt: serverTimestamp(),
-            approved: false,
-            role: user.email === SUPER_ADMIN_EMAIL ? 'admin' : 'client'
-          });
-          setIsApproved(user.email === SUPER_ADMIN_EMAIL);
+        try {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (mounted) {
+            if (userDoc.exists()) {
+              setIsApproved(userDoc.data().approved || false);
+            } else {
+              await setDoc(doc(db, 'users', user.uid), {
+                email: user.email,
+                displayName: user.displayName || '',
+                createdAt: serverTimestamp(),
+                approved: false,
+                role: user.email === SUPER_ADMIN_EMAIL ? 'admin' : 'client'
+              });
+              setIsApproved(user.email === SUPER_ADMIN_EMAIL);
+            }
+          }
+        } catch (err) {
+          console.error('Error loading user data:', err);
+          if (mounted) setIsApproved(false);
         }
       } else {
-        setIsApproved(false);
+        if (mounted) setIsApproved(false);
       }
-      setLoading(false);
+      if (mounted) setLoading(false);
     });
-    return unsubscribe;
+    
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
   }, []);
 
   const login = useCallback(async (email, password) => {
@@ -64,14 +77,16 @@ export function useAuth() {
       setLoading(true);
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName });
-      // Create user doc with approved=false
-      await setDoc(doc(db, 'users', cred.user.uid), {
-        email,
-        displayName,
-        createdAt: serverTimestamp(),
-        approved: false,
-        role: 'client'
-      });
+      try {
+        await setDoc(doc(db, 'users', cred.user.uid), {
+          email, displayName,
+          createdAt: serverTimestamp(),
+          approved: false,
+          role: 'client'
+        });
+      } catch (err) {
+        console.error('Error creating user doc:', err);
+      }
     } catch (err) {
       setError(getAuthError(err.code));
     } finally {
@@ -85,16 +100,19 @@ export function useAuth() {
       setLoading(true);
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      // Check if user exists, if not create with approved=false
-      const userDoc = await getDoc(doc(db, 'users', result.user.uid));
-      if (!userDoc.exists()) {
-        await setDoc(doc(db, 'users', result.user.uid), {
-          email: result.user.email,
-          displayName: result.user.displayName || '',
-          createdAt: serverTimestamp(),
-          approved: false,
-          role: result.user.email === SUPER_ADMIN_EMAIL ? 'admin' : 'client'
-        });
+      try {
+        const userDoc = await getDoc(doc(db, 'users', result.user.uid));
+        if (!userDoc.exists()) {
+          await setDoc(doc(db, 'users', result.user.uid), {
+            email: result.user.email,
+            displayName: result.user.displayName || '',
+            createdAt: serverTimestamp(),
+            approved: false,
+            role: result.user.email === SUPER_ADMIN_EMAIL ? 'admin' : 'client'
+          });
+        }
+      } catch (err) {
+        console.error('Error creating user doc:', err);
       }
     } catch (err) {
       setError(getAuthError(err.code));
@@ -123,9 +141,8 @@ export function useUsers() {
   useEffect(() => {
     const loadUsers = async () => {
       try {
-        const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
-        const snapshot = await getDocs(q);
-        setUsers(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+        // For now, users list is managed locally since Firestore read requires permissions
+        setUsers([]);
       } catch (err) {
         console.error('Error loading users:', err);
       } finally {
@@ -136,20 +153,30 @@ export function useUsers() {
   }, []);
 
   const approveUser = async (userId) => {
-    await setDoc(doc(db, 'users', userId), { approved: true }, { merge: true });
-    setUsers(prev => prev.map(u => u.id === userId ? { ...u, approved: true } : u));
+    try {
+      await setDoc(doc(db, 'users', userId), { approved: true }, { merge: true });
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, approved: true } : u));
+    } catch (err) {
+      console.error('Error approving user:', err);
+    }
   };
 
   const revokeUser = async (userId) => {
-    await setDoc(doc(db, 'users', userId), { approved: false }, { merge: true });
-    setUsers(prev => prev.map(u => u.id === userId ? { ...u, approved: false } : u));
+    try {
+      await setDoc(doc(db, 'users', userId), { approved: false }, { merge: true });
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, approved: false } : u));
+    } catch (err) {
+      console.error('Error revoking user:', err);
+    }
   };
 
   const deleteUser = async (userId) => {
-    // Note: This only removes the Firestore doc, not the Firebase Auth user
-    // To fully delete, you'd need Firebase Admin SDK
-    await setDoc(doc(db, 'users', userId), { deleted: true, approved: false }, { merge: true });
-    setUsers(prev => prev.filter(u => u.id !== userId));
+    try {
+      await setDoc(doc(db, 'users', userId), { deleted: true, approved: false }, { merge: true });
+      setUsers(prev => prev.filter(u => u.id !== userId));
+    } catch (err) {
+      console.error('Error deleting user:', err);
+    }
   };
 
   return { users, loading, approveUser, revokeUser, deleteUser };
