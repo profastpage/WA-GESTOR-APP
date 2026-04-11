@@ -1,15 +1,19 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // No "standalone" output - @cloudflare/next-on-pages handles the build
   typescript: {
     ignoreBuildErrors: true,
   },
   reactStrictMode: false,
-  // Allow images from external sources
   images: {
-    unoptimized: true, // Required for Cloudflare Pages
+    unoptimized: true,
   },
+  // Tell the bundler to NOT try to bundle these packages
+  // They will be available at runtime on Cloudflare Workers
+  serverExternalPackages: [
+    '@prisma/adapter-libsql',
+    '@libsql/client',
+  ],
 };
 
 export default nextConfig;
