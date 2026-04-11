@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
+export const runtime = 'edge';
+
 // Known license keys that should always work
 const KNOWN_LICENSE_KEYS = [
   { key: 'WA-PRO-2026-X7K9', plan: 'pro' },

@@ -1,0 +1,7 @@
+name = "wa-manager"
+compatibility_date = "2025-04-11"
+compatibility_flags = ["nodejs_compat"]
+
+# Cloudflare Pages configuration
+[vars]
+NODE_ENV = "production"
